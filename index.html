@@ -13,7 +13,7 @@
     <!-- Chart.js para gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <script>
         tailwind.config = {
@@ -21,19 +21,12 @@
                 extend: {
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        excelPurple: '#5f4b8b',
-                        excelLightPurple: '#d9d2e9',
-                        excelBlue: '#cfe2f3',
-                        excelAmber: '#e9d8a6',
                     }
                 }
             }
         }
     </script>
     <style>
-        /* Custom scrollbar */
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -50,41 +43,44 @@
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white">
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
 
     <!-- Header Navigation -->
     <header class="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-30 shadow-md">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center space-x-3">
-                <div class="p-2 bg-indigo-600 rounded-lg text-white shadow-sm">
+                <div class="p-2 bg-indigo-600 rounded-lg text-white">
                     <i data-lucide="wallet" class="w-6 h-6"></i>
                 </div>
                 <div>
                     <h1 class="font-bold text-lg leading-tight">Orçamento de Compras</h1>
-                    <p class="text-xs text-slate-400">Acompanhamento Integrado - Outubro/2026</p>
+                    <p class="text-xs text-slate-400">Controle de Entradas 1313 & Pedidos 220-1301</p>
                 </div>
             </div>
             
-            <div class="flex items-center space-x-2 sm:space-x-3">
-                <!-- Dropzone / Quick Action Buttons -->
-                <button onclick="openImportModal('entries')" class="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-medium py-2 px-3 sm:px-4 rounded-lg transition shadow-sm">
-                    <i data-lucide="file-spread-sheet" class="w-4 h-4"></i>
-                    <span>Subir Entradas (1313)</span>
-                </button>
-
-                <button onclick="clearEntries1313()" class="flex items-center space-x-2 bg-rose-600 hover:bg-rose-700 text-white text-xs sm:text-sm font-medium py-2 px-3 sm:px-4 rounded-lg transition shadow-sm" title="Limpar todas as notas de entrada 1313">
+            <div class="flex items-center space-x-2">
+                <!-- Limpar Entradas 1313 Button -->
+                <button type="button" onclick="confirmClearInvoices()" class="flex items-center space-x-1.5 bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/40 text-xs font-semibold py-2 px-3 rounded-lg transition">
                     <i data-lucide="trash-2" class="w-4 h-4"></i>
-                    <span>Limpar Notas (1313)</span>
+                    <span class="hidden md:inline">Limpar Notas (1313)</span>
                 </button>
 
-                <button onclick="openImportModal('orders')" class="flex items-center space-x-2 bg-amber-600 hover:bg-amber-700 text-white text-xs sm:text-sm font-medium py-2 px-3 sm:px-4 rounded-lg transition shadow-sm">
-                    <i data-lucide="file-check-2" class="w-4 h-4"></i>
-                    <span>Subir Pedidos (220-1301)</span>
+                <!-- Dropzone / Quick Action Buttons -->
+                <button type="button" onclick="triggerFileInput('1313')" class="flex items-center space-x-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold py-2 px-3 rounded-lg transition shadow-sm">
+                    <i data-lucide="upload" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Subir Entradas (1313)</span>
                 </button>
+                <button type="button" onclick="triggerFileInput('220')" class="flex items-center space-x-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold py-2 px-3 rounded-lg transition shadow-sm">
+                    <i data-lucide="file-spread-sheet" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Subir Pedidos (220-1301)</span>
+                </button>
+                
+                <input type="file" id="file-input-1313" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleFileSelect(event, '1313')">
+                <input type="file" id="file-input-220" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleFileSelect(event, '220')">
 
-                <button onclick="openModal('modal-add-entry')" class="hidden md:flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-sm font-medium py-2 px-3 rounded-lg transition">
+                <button type="button" onclick="openModal('modal-add-entry')" class="flex items-center space-x-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold py-2 px-3 rounded-lg transition">
                     <i data-lucide="plus-circle" class="w-4 h-4"></i>
-                    <span>Novo Lançamento</span>
+                    <span class="hidden lg:inline">Novo Reg.</span>
                 </button>
             </div>
         </div>
@@ -92,175 +88,113 @@
 
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-        <!-- Spreadsheet Standardized Summary Banner (Fiel à Imagem Excel Fornecida) -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 overflow-x-auto">
-            <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+        <!-- Excel Grid Replication Banner -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-5 overflow-x-auto">
+            <div class="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
                 <div class="flex items-center space-x-2">
-                    <i data-lucide="layout-grid" class="w-5 h-5 text-indigo-600"></i>
-                    <h2 class="font-bold text-slate-800 text-base">Resumo Geral do Orçamento</h2>
+                    <i data-lucide="table" class="w-5 h-5 text-indigo-600"></i>
+                    <h2 class="font-bold text-slate-800">Resumo do Orçamento de Compras</h2>
                 </div>
-                <div class="text-xs text-slate-500 flex items-center gap-1.5 bg-slate-100 px-3 py-1 rounded-full">
-                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-slate-500"></i>
-                    Atualizado em: <span id="card-atualizacao" class="font-semibold text-slate-700">24/10/2026</span>
+                <div class="text-xs text-slate-500 flex items-center gap-1">
+                    <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                    Atualização: <span id="card-atualizacao" class="font-bold text-slate-700">23/10/2026</span>
                 </div>
             </div>
 
-            <!-- Spreadsheet Grid Layout - Fiel ao Excel -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 min-w-[700px]">
+            <!-- Grid structured like the user spreadsheet image -->
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5 min-w-[700px]">
                 
-                <!-- Coluna 1: ORÇAMENTO e PROJEÇÃO -->
-                <div class="space-y-3">
-                    <!-- ORÇAMENTO -->
-                    <div class="bg-[#fefae0] border border-[#e9d8a6] rounded-lg p-3.5 flex justify-between items-center shadow-2xs">
-                        <div>
-                            <span class="text-xs font-bold text-slate-700 uppercase tracking-wider block">ORÇAMENTO</span>
-                            <span class="text-xs text-slate-500">Teto aprovado mês</span>
-                        </div>
-                        <div class="text-right">
-                            <span class="text-lg font-extrabold text-slate-900 block" id="card-orcamento">R$ 16.561.275,00</span>
-                        </div>
-                    </div>
+                <!-- ORÇAMENTO -->
+                <div class="bg-indigo-50/60 border border-indigo-100 rounded-lg p-3">
+                    <span class="text-[11px] font-bold text-indigo-900 uppercase block tracking-wider">ORÇAMENTO</span>
+                    <div class="text-base font-extrabold text-slate-900 mt-1" id="card-orcamento">R$ 16.561.275,00</div>
+                </div>
 
-                    <!-- PROJEÇÃO FAT -->
-                    <div class="bg-[#e0aaff]/20 border border-[#c77dff]/40 rounded-lg p-3.5 flex justify-between items-center shadow-2xs">
-                        <div>
-                            <span class="text-xs font-bold text-purple-900 uppercase tracking-wider block">PROJEÇÃO FAT</span>
-                            <span class="text-xs text-purple-700">Estimativa de receita</span>
-                        </div>
-                        <div class="text-right">
-                            <span class="text-lg font-extrabold text-purple-950 block" id="card-projecao">R$ 24.001.848,00</span>
-                        </div>
+                <!-- UTILIZADO 1313 -->
+                <div class="bg-purple-50/70 border border-purple-200/80 rounded-lg p-3">
+                    <span class="text-[11px] font-bold text-purple-900 uppercase block tracking-wider">UTILIZADO 1313</span>
+                    <div class="text-base font-extrabold text-purple-950 mt-1" id="card-utilizado">R$ 13.670.785,00</div>
+                </div>
+
+                <!-- PEDIDOS 220-1301 -->
+                <div class="bg-purple-100/80 border border-purple-200 rounded-lg p-3">
+                    <span class="text-[11px] font-bold text-purple-950 uppercase block tracking-wider">PEDIDOS 220-1301</span>
+                    <div class="text-base font-extrabold text-purple-950 mt-1" id="card-pedidos">R$ 1.272.603,00</div>
+                </div>
+
+                <!-- PRÉ ENTRADA -->
+                <div class="bg-purple-100/90 border border-purple-300 rounded-lg p-3">
+                    <span class="text-[11px] font-bold text-purple-950 uppercase block tracking-wider">PRÉ ENTRADA</span>
+                    <div class="text-base font-extrabold text-purple-950 mt-1" id="card-preentrada">R$ 1.367.331,00</div>
+                </div>
+
+                <!-- OUTROS VALORES -->
+                <div class="bg-slate-100/80 border border-slate-200 rounded-lg p-3">
+                    <span class="text-[11px] font-bold text-slate-700 uppercase block tracking-wider">OUTROS VALORES</span>
+                    <div class="text-base font-extrabold text-slate-800 mt-1" id="card-outros">R$ 0,00</div>
+                </div>
+
+                <!-- SALDO FINAL + PERCENTUAL -->
+                <div class="bg-amber-100/80 border border-amber-300 rounded-lg p-3 relative flex flex-col justify-between">
+                    <div>
+                        <span class="text-[11px] font-bold text-amber-950 uppercase block tracking-wider">SALDO FINAL</span>
+                        <div class="text-base font-extrabold text-amber-950 mt-1" id="card-saldo">R$ 250.556,00</div>
+                    </div>
+                    <div class="mt-1 pt-1 border-t border-amber-200/60 flex items-center justify-between">
+                        <span class="text-[10px] text-amber-800 font-medium">Comprometido:</span>
+                        <span class="text-xs font-black text-amber-900" id="card-percentual">98.49%</span>
                     </div>
                 </div>
 
-                <!-- Coluna 2: COMPROMETIMENTOS (1313 + PEDIDOS + PRÉ ENTRADA) -->
-                <div class="space-y-3">
-                    <!-- UTILIZADO 1313 -->
-                    <div class="bg-purple-100/80 border border-purple-200 rounded-lg p-3 px-3.5 flex justify-between items-center">
-                        <div>
-                            <span class="text-xs font-bold text-purple-900 uppercase tracking-wider block">UTILIZADO 1313</span>
-                            <span class="text-xs text-purple-700">Notas de Entrada</span>
-                        </div>
-                        <span class="text-base font-extrabold text-purple-950" id="card-utilizado">R$ 13.670.785,00</span>
-                    </div>
+            </div>
 
-                    <!-- PEDIDOS 220-1301 -->
-                    <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 px-3.5 flex justify-between items-center">
-                        <div>
-                            <span class="text-xs font-bold text-amber-900 uppercase tracking-wider block">PEDIDOS 220-1301</span>
-                            <span class="text-xs text-amber-700">Pendentes Faturamento</span>
-                        </div>
-                        <span class="text-base font-extrabold text-amber-950" id="card-pedidos">R$ 1.272.603,00</span>
-                    </div>
-
-                    <!-- PRÉ ENTRADA -->
-                    <div class="bg-sky-50 border border-sky-200 rounded-lg p-3 px-3.5 flex justify-between items-center">
-                        <div>
-                            <span class="text-xs font-bold text-sky-900 uppercase tracking-wider block">PRÉ ENTRADA</span>
-                            <span class="text-xs text-sky-700">Recebimento físico</span>
-                        </div>
-                        <span class="text-base font-extrabold text-sky-950" id="card-pre-entrada">R$ 1.367.331,00</span>
-                    </div>
+            <!-- Bottom Row Secondary Info -->
+            <div class="mt-3 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between text-xs text-slate-500 gap-2">
+                <div>
+                    <span>PROJEÇÃO FAT: <strong class="text-slate-800" id="card-projecao">R$ 24.001.848,00</strong></span>
                 </div>
-
-                <!-- Coluna 3: SALDO FINAL & COMPROMETIMENTO TOTAL -->
-                <div class="space-y-3 flex flex-col justify-between">
-                    
-                    <!-- OUTROS VALORES -->
-                    <div class="bg-slate-100/80 border border-slate-200 rounded-lg p-2.5 px-3.5 flex justify-between items-center text-xs">
-                        <span class="font-bold text-slate-600 uppercase">OUTROS VALORES</span>
-                        <div class="flex items-center space-x-1">
-                            <span class="font-semibold text-slate-800" id="card-outros">R$ 0,00</span>
-                            <button onclick="editOutrosValores()" class="text-slate-400 hover:text-indigo-600 p-1" title="Editar Outros Valores">
-                                <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- SALDO FINAL -->
-                    <div class="bg-emerald-500 text-white rounded-lg p-3.5 flex justify-between items-center shadow-md">
-                        <div>
-                            <span class="text-xs font-extrabold uppercase tracking-wider block text-emerald-100">SALDO FINAL</span>
-                            <span class="text-[11px] text-emerald-100">Orçamento livre restante</span>
-                        </div>
-                        <div class="text-right">
-                            <span class="text-xl font-black text-white block" id="card-saldo-final">R$ 250.556,00</span>
-                        </div>
-                    </div>
-
-                    <!-- % UTILIZAÇÃO / COMPROMETIMENTO -->
-                    <div class="bg-slate-900 text-white rounded-lg p-3 px-3.5 flex justify-between items-center shadow-md">
-                        <div class="flex items-center space-x-2">
-                            <i data-lucide="pie-chart" class="w-4 h-4 text-amber-400"></i>
-                            <span class="text-xs font-bold uppercase tracking-wider text-slate-300">COMPROMETIMENTO TOTAL</span>
-                        </div>
-                        <span class="text-lg font-black text-amber-400" id="card-percentual">98,49%</span>
-                    </div>
-
+                <div class="flex space-x-4">
+                    <span>Total Comprometido: <strong class="text-purple-900" id="card-total-comprometido">R$ 16.310.719,00</strong></span>
                 </div>
-
             </div>
         </div>
 
-        <!-- Metric KPI Summary Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            
-            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs flex items-center justify-between">
-                <div>
-                    <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Entradas (1313)</span>
-                    <h3 class="text-xl font-bold text-slate-800 mt-0.5" id="kpi-qtd-entradas">8 Notas</h3>
-                    <p class="text-[11px] text-slate-400 mt-0.5" id="kpi-val-entradas">R$ 13.670.785,00</p>
-                </div>
-                <div class="p-3 bg-purple-50 text-purple-600 rounded-xl">
-                    <i data-lucide="receipt" class="w-6 h-6"></i>
-                </div>
-            </div>
-
-            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs flex items-center justify-between">
-                <div>
-                    <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Pedidos (220-1301)</span>
-                    <h3 class="text-xl font-bold text-slate-800 mt-0.5" id="kpi-qtd-pedidos">10 Pedidos</h3>
-                    <p class="text-[11px] text-slate-400 mt-0.5" id="kpi-val-pedidos">R$ 1.272.603,00</p>
-                </div>
-                <div class="p-3 bg-amber-50 text-amber-600 rounded-xl">
-                    <i data-lucide="shopping-cart" class="w-6 h-6"></i>
+        <!-- Import Dropzones -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="border-2 border-dashed border-indigo-300 bg-indigo-50/40 hover:bg-indigo-50 rounded-xl p-4 text-center cursor-pointer transition" onclick="triggerFileInput('1313')">
+                <div class="flex items-center justify-center space-x-3">
+                    <div class="p-2.5 bg-indigo-100 text-indigo-600 rounded-lg">
+                        <i data-lucide="upload" class="w-5 h-5"></i>
+                    </div>
+                    <div class="text-left">
+                        <p class="text-xs font-bold text-slate-800">Importar Notas de Entrada (1313)</p>
+                        <p class="text-[11px] text-slate-500">Arraste ou clique para enviar planilha (.xlsx, .csv)</p>
+                    </div>
                 </div>
             </div>
 
-            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs flex items-center justify-between">
-                <div>
-                    <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Pré-Entrada</span>
-                    <h3 class="text-xl font-bold text-slate-800 mt-0.5" id="kpi-val-pre-kpi">R$ 1.367.331,00</h3>
-                    <p class="text-[11px] text-slate-400 mt-0.5">Entradas em processamento</p>
-                </div>
-                <div class="p-3 bg-sky-50 text-sky-600 rounded-xl">
-                    <i data-lucide="truck" class="w-6 h-6"></i>
-                </div>
-            </div>
-
-            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs flex items-center justify-between">
-                <div>
-                    <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Ticket Médio (Ped/NFe)</span>
-                    <h3 class="text-xl font-bold text-slate-800 mt-0.5" id="kpi-ticket-medio">R$ 830.188,22</h3>
-                    <p class="text-[11px] text-slate-400 mt-0.5">Média geral por documento</p>
-                </div>
-                <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
-                    <i data-lucide="calculator" class="w-6 h-6"></i>
+            <div class="border-2 border-dashed border-purple-300 bg-purple-50/40 hover:bg-purple-50 rounded-xl p-4 text-center cursor-pointer transition" onclick="triggerFileInput('220')">
+                <div class="flex items-center justify-center space-x-3">
+                    <div class="p-2.5 bg-purple-100 text-purple-600 rounded-lg">
+                        <i data-lucide="file-spreadsheet" class="w-5 h-5"></i>
+                    </div>
+                    <div class="text-left">
+                        <p class="text-xs font-bold text-slate-800">Importar Pedidos Pendentes (220-1301)</p>
+                        <p class="text-[11px] text-slate-500">Mapeamento automático: Pedido, Cód., Fornecedor, Total</p>
+                    </div>
                 </div>
             </div>
-
         </div>
 
-        <!-- Visual Analytics Chart Section -->
+        <!-- Charts Section -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Main Chart: Budget Composition Breakdown -->
             <div class="lg:col-span-2 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                 <div class="flex items-center justify-between mb-4">
                     <div>
-                        <h3 class="font-bold text-slate-800">Composição e Comprometimento do Orçamento</h3>
-                        <p class="text-xs text-slate-500">Comparação visual do Orçamento vs Gastos Efetuados e Pedidos Pendentes</p>
+                        <h3 class="font-semibold text-slate-800">Composição do Orçamento Total</h3>
+                        <p class="text-xs text-slate-500">Comparativo entre Entradas, Pedidos, Pré-Entrada e Saldo</p>
                     </div>
-                    <div class="p-2 bg-slate-100 rounded-lg text-slate-600">
+                    <div class="p-1.5 bg-slate-100 rounded-lg text-slate-600">
                         <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
                     </div>
                 </div>
@@ -269,152 +203,141 @@
                 </div>
             </div>
 
-            <!-- Distribution Chart: Cost Center Breakdown -->
             <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                 <div class="flex items-center justify-between mb-4">
                     <div>
-                        <h3 class="font-bold text-slate-800">Distribuição por Fornecedor (Top 5)</h3>
-                        <p class="text-xs text-slate-500">Principais fornecedores em volume de pedidos/notas</p>
+                        <h3 class="font-semibold text-slate-800">Visão Geral de Comprometimento</h3>
+                        <p class="text-xs text-slate-500">Distribuição percentual do orçamento</p>
                     </div>
-                    <div class="p-2 bg-slate-100 rounded-lg text-slate-600">
+                    <div class="p-1.5 bg-slate-100 rounded-lg text-slate-600">
                         <i data-lucide="pie-chart" class="w-4 h-4"></i>
                     </div>
                 </div>
                 <div class="h-64 relative flex items-center justify-center">
-                    <canvas id="supplierChart"></canvas>
+                    <canvas id="categoryChart"></canvas>
                 </div>
             </div>
         </div>
 
-        <!-- File Upload Area / Drag and Drop Banner -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- Upload Dropzone 1: Notas de Entrada -->
-            <div onclick="openImportModal('entries')" class="border-2 border-dashed border-indigo-300 bg-indigo-50/40 hover:bg-indigo-50/80 rounded-xl p-5 text-center cursor-pointer transition relative group">
-                <div class="flex flex-col items-center justify-center space-y-2">
-                    <div class="p-2.5 bg-indigo-100 rounded-full text-indigo-600 group-hover:scale-110 transition">
-                        <i data-lucide="upload-cloud" class="w-6 h-6"></i>
-                    </div>
-                    <div>
-                        <h4 class="text-sm font-bold text-slate-800">Importar Planilha de Entradas (1313)</h4>
-                        <p class="text-xs text-slate-500 mt-1">Carregue o arquivo com as Notas Fiscais confirmadas do mês</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Upload Dropzone 2: Pedidos de Compra -->
-            <div onclick="openImportModal('orders')" class="border-2 border-dashed border-amber-300 bg-amber-50/40 hover:bg-amber-50/80 rounded-xl p-5 text-center cursor-pointer transition relative group">
-                <div class="flex flex-col items-center justify-center space-y-2">
-                    <div class="p-2.5 bg-amber-100 rounded-full text-amber-600 group-hover:scale-110 transition">
-                        <i data-lucide="file-up" class="w-6 h-6"></i>
-                    </div>
-                    <div>
-                        <h4 class="text-sm font-bold text-slate-800">Importar Pedidos Pendentes (220-1301)</h4>
-                        <p class="text-xs text-slate-500 mt-1">Suba a planilha com Pedido, Cód. Fornecedor, Dt. Emissão e Vl. Total</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Detailed Tables Area with Tab Switching -->
+        <!-- Main Table with Tabs -->
         <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
             
-            <!-- Table Header Toolbar with Tabs -->
-            <div class="border-b border-slate-200 bg-slate-50/70">
+            <div class="p-4 border-b border-slate-200 bg-slate-50/70 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 
-                <!-- Tab Switching Bar -->
-                <div class="flex border-b border-slate-200 px-4 pt-3 space-x-2">
-                    <button id="tab-btn-entries" onclick="switchTab('entries')" class="py-2.5 px-4 font-bold text-sm border-b-2 border-indigo-600 text-indigo-600 flex items-center space-x-2 transition">
-                        <i data-lucide="receipt" class="w-4 h-4"></i>
-                        <span>Notas Fiscais de Entrada (1313)</span>
-                        <span id="badge-count-entries" class="ml-2 bg-indigo-100 text-indigo-800 text-xs px-2 py-0.5 rounded-full font-bold">8</span>
+                <!-- Table View Switcher Tabs -->
+                <div class="flex bg-slate-200 p-1 rounded-lg space-x-1">
+                    <button type="button" id="tab-btn-1313" onclick="switchTab('1313')" class="px-3 py-1.5 text-xs font-bold rounded-md bg-white text-indigo-900 shadow-sm transition">
+                        Notas de Entrada 1313 (<span id="tab-count-1313">8</span>)
                     </button>
-
-                    <button id="tab-btn-orders" onclick="switchTab('orders')" class="py-2.5 px-4 font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2 transition">
-                        <i data-lucide="shopping-bag" class="w-4 h-4"></i>
-                        <span>Pedidos Pendentes (220-1301)</span>
-                        <span id="badge-count-orders" class="ml-2 bg-slate-200 text-slate-700 text-xs px-2 py-0.5 rounded-full font-bold">10</span>
+                    <button type="button" id="tab-btn-220" onclick="switchTab('220')" class="px-3 py-1.5 text-xs font-bold rounded-md text-slate-600 hover:text-slate-900 transition">
+                        Pedidos 220-1301 (<span id="tab-count-220">10</span>)
                     </button>
                 </div>
 
-                <!-- Filters & Search Toolbar -->
-                <div class="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div class="relative flex-1 sm:w-80">
+                <div class="flex flex-wrap items-center gap-2">
+                    <div class="relative flex-1 sm:w-64">
                         <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
-                        <input type="text" id="table-search" placeholder="Buscar por número, código ou fornecedor..." oninput="filterTable()" class="w-full pl-9 pr-3 py-1.5 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        <input type="text" id="table-search" placeholder="Buscar por código, fornecedor..." oninput="filterTable()" class="w-full pl-9 pr-3 py-1.5 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     </div>
 
-                    <div class="flex items-center space-x-2">
-                        <button onclick="openModal('modal-add-entry')" class="md:hidden bg-indigo-600 text-white text-xs px-3 py-2 rounded-lg font-medium flex items-center space-x-1">
-                            <i data-lucide="plus" class="w-4 h-4"></i>
-                            <span>Novo Lançamento</span>
-                        </button>
-                        <button onclick="exportToCSV()" class="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-100 rounded-lg transition">
-                            <i data-lucide="download" class="w-4 h-4"></i>
-                            <span>Exportar CSV</span>
-                        </button>
-                    </div>
+                    <button type="button" onclick="exportToCSV()" class="p-2 text-slate-600 bg-white border border-slate-300 hover:bg-slate-100 rounded-lg transition" title="Exportar para CSV">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                    </button>
                 </div>
             </div>
 
-            <!-- Table Container -->
+            <!-- Table -->
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
-                    <thead id="table-head">
-                        <!-- Dynamic Header inserted by JS -->
+                    <thead>
+                        <tr id="table-head-row" class="bg-slate-100/80 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                            <!-- Dynamic Headings -->
+                        </tr>
                     </thead>
-                    <tbody id="table-tbody" class="divide-y divide-slate-200 text-sm">
-                        <!-- Dynamic Content inserted by JS -->
+                    <tbody id="data-tbody" class="divide-y divide-slate-200 text-xs">
+                        <!-- Dynamic Records -->
                     </tbody>
                 </table>
             </div>
 
-            <!-- Table Footer Status -->
-            <div class="px-5 py-3 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2">
+            <!-- Table Footer -->
+            <div class="px-4 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
                 <span id="record-count">Exibindo registros</span>
-                <span class="font-bold text-slate-800 text-sm" id="table-total-sum">Total Exibido: R$ 0,00</span>
+                <span class="font-bold text-slate-800" id="table-total-sum">Total Exibido: R$ 0,00</span>
             </div>
         </div>
 
     </main>
 
-    <!-- Hidden Input File Handlers -->
-    <input type="file" id="file-input-entries" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleFileSelect(event, 'entries')">
-    <input type="file" id="file-input-orders" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleFileSelect(event, 'orders')">
-
-    <!-- Modal: Adicionar/Editar Registro Manual -->
+    <!-- Modal: Adicionar/Editar Manualmente -->
     <div id="modal-add-entry" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-100 transform transition-all">
-            <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                <h3 class="font-bold text-slate-800" id="modal-title">Novo Lançamento</h3>
-                <button onclick="closeModal('modal-add-entry')" class="text-slate-400 hover:text-slate-600 transition">
+        <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-100">
+            <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h3 class="font-bold text-slate-800 text-sm" id="modal-title">Novo Lançamento</h3>
+                <button type="button" onclick="closeModal('modal-add-entry')" class="text-slate-400 hover:text-slate-600">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
             
-            <form id="form-add-entry" onsubmit="handleSaveEntry(event)" class="p-5 space-y-4">
+            <form id="form-add-entry" onsubmit="handleSaveEntry(event)" class="p-4 space-y-3">
                 <input type="hidden" id="entry-id">
                 
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Tipo de Documento</label>
-                    <select id="input-doc-type" onchange="toggleFormFields()" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
-                        <option value="entry">Nota Fiscal de Entrada (1313)</option>
-                        <option value="order">Pedido de Compra Pendente (220-1301)</option>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Tipo de Registro</label>
+                    <select id="input-type" onchange="toggleFormFields()" class="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                        <option value="1313">Nota de Entrada (1313)</option>
+                        <option value="220">Pedido Pendente (220-1301)</option>
                     </select>
                 </div>
 
-    <!-- Modal de Confirmação Customizado para Limpar Notas -->
-    <div id="modal-confirm-clear" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-white rounded-2xl max-w-sm w-full shadow-2xl p-6 border border-slate-100 text-center space-y-4">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1" id="lbl-code">Nº Nota Fiscal</label>
+                        <input type="text" id="input-code" placeholder="Ex: 33424" required class="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Data Emissão</label>
+                        <input type="date" id="input-date" required class="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Cód. Forn.</label>
+                        <input type="text" id="input-codforn" placeholder="5071" class="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Razão Social / Fornecedor</label>
+                        <input type="text" id="input-supplier" placeholder="BEBIDAS GRASSI DO BRASIL" required class="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Valor Total (R$)</label>
+                    <input type="number" step="0.01" id="input-value" placeholder="0.00" required class="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg">
+                </div>
+
+                <div class="pt-3 flex space-x-2 justify-end border-t border-slate-100">
+                    <button type="button" onclick="closeModal('modal-add-entry')" class="px-3 py-1.5 text-xs text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg font-medium">Cancelar</button>
+                    <button type="submit" class="px-3 py-1.5 text-xs text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg font-medium">Salvar Registro</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação para Limpeza -->
+    <div id="modal-confirm-clear" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full shadow-2xl p-5 text-center space-y-4">
             <div class="w-12 h-12 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto">
                 <i data-lucide="alert-triangle" class="w-6 h-6"></i>
             </div>
             <div>
-                <h3 class="font-bold text-slate-800 text-lg">Limpar todas as Notas 1313?</h3>
-                <p class="text-xs text-slate-500 mt-1">Essa ação removerá permanentemente todas as notas de entrada (1313) carregadas. Deseja continuar?</p>
+                <h3 class="font-bold text-slate-800 text-base">Limpar Notas de Entrada?</h3>
+                <p class="text-xs text-slate-500 mt-1">Deseja realmente remover todas as **Notas de Entrada (1313)**? Esta ação irá zerar o valor Utilizado 1313.</p>
             </div>
-            <div class="flex space-x-3 justify-center pt-2">
-                <button onclick="closeModal('modal-confirm-clear')" class="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition">Cancelar</button>
-                <button onclick="executeClearEntries1313()" class="px-4 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-lg transition shadow-sm">Sim, Limpar Notas</button>
+            <div class="flex space-x-2 justify-center pt-2">
+                <button type="button" onclick="closeModal('modal-confirm-clear')" class="px-4 py-2 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg">Cancelar</button>
+                <button type="button" onclick="executeClearInvoices()" class="px-4 py-2 text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white rounded-lg">Sim, Limpar Tudo</button>
             </div>
         </div>
     </div>
@@ -422,57 +345,64 @@
     <!-- Notification Toast -->
     <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center space-x-3 transition-all duration-300 opacity-0 pointer-events-none transform translate-y-4 z-50">
         <i data-lucide="check-circle" class="w-5 h-5 text-emerald-400" id="toast-icon"></i>
-        <span id="toast-message" class="text-sm font-medium">Operação realizada com sucesso!</span>
+        <span id="toast-message" class="text-xs font-medium">Operação realizada com sucesso!</span>
     </div>
 
     <script>
-        // State Store
+        // Budget State
         let budgetData = {
             orcamento: 16561275.00,
             preEntrada: 1367331.00,
             outrosValores: 0.00,
             projecaoFat: 24001848.00,
-            atualizacao: "24/10/2026"
+            atualizacao: "23/10/2026"
         };
 
-        let activeTab = 'entries'; // 'entries' ou 'orders'
+        // Current Active Table Tab ('1313' or '220')
+        let currentTab = '1313';
 
-        // Data for Entries (Utilizado 1313) ~ Total R$ 13.670.785,00
+        // Invoices 1313 Data
         let invoices = [
-            { id: 1, data: "2026-10-02", nfe: "NF-88201", codFornec: "1020", fornecedor: "SIDERURGICA PAULISTANA S/A", valor: 4250000.00, rotina: "1313", status: "Processado" },
-            { id: 2, data: "2026-10-05", nfe: "NF-88245", codFornec: "2044", fornecedor: "PETROBRAS DISTRIBUIDORA", valor: 3120000.00, rotina: "1313", status: "Processado" },
-            { id: 3, data: "2026-10-09", nfe: "NF-10492", codFornec: "3051", fornecedor: "KLABIN EMBALAGENS S/A", valor: 1850000.00, rotina: "1313", status: "Processado" },
-            { id: 4, data: "2026-10-12", nfe: "NF-40321", codFornec: "4012", fornecedor: "LOGISTICA MULTIMODAL LTDA", valor: 1420000.00, rotina: "1313", status: "Processado" },
-            { id: 5, data: "2026-10-15", nfe: "NF-09211", codFornec: "5088", fornecedor: "TECHSYS AUTOMACAO & TI", valor: 680000.00, rotina: "1313", status: "Processado" },
-            { id: 6, data: "2026-10-18", nfe: "NF-77312", codFornec: "1099", fornecedor: "METALURGICA GERDAU", valor: 1250000.00, rotina: "1313", status: "Processado" },
-            { id: 7, data: "2026-10-21", nfe: "NF-55109", codFornec: "6021", fornecedor: "WEG EQUIPAMENTOS ELETRICOS", valor: 800785.00, rotina: "1313", status: "Processado" },
-            { id: 8, data: "2026-10-23", nfe: "NF-30192", codFornec: "3052", fornecedor: "SUZANO PAPEL E CELULOSE", valor: 300000.00, rotina: "1313", status: "Processado" }
+            { id: 1, data: "2026-10-02", nfe: "NF-88201", codForn: "1020", fornecedor: "Siderúrgica Paulistana S/A", valor: 4250000.00 },
+            { id: 2, data: "2026-10-05", nfe: "NF-88245", codForn: "3040", fornecedor: "Petrobras Distribuidora", valor: 3120000.00 },
+            { id: 3, data: "2026-10-09", nfe: "NF-10492", codForn: "5012", fornecedor: "Klabin Embalagens S/A", valor: 1850000.00 },
+            { id: 4, data: "2026-10-12", nfe: "NF-40321", codForn: "8821", fornecedor: "Logística Multimodal Ltda", valor: 1420000.00 },
+            { id: 5, data: "2026-10-15", nfe: "NF-09211", codForn: "9001", fornecedor: "TechSys Automação & TI", valor: 680000.00 },
+            { id: 6, data: "2026-10-18", nfe: "NF-77312", codForn: "1102", fornecedor: "Metalúrgica Gerdau", valor: 1250000.00 },
+            { id: 7, data: "2026-10-21", nfe: "NF-55109", codForn: "4401", fornecedor: "WEG Equipamentos Elétricos", valor: 800785.00 },
+            { id: 8, data: "2026-10-23", nfe: "NF-30192", codForn: "1290", fornecedor: "Suzano Papel e Celulose", valor: 300000.00 }
         ];
 
-        // Sample Data for Purchase Orders (Pedidos 220-1301) ~ Total R$ 1.272.603,00 (Exatamente igual a foto do usuário)
+        // Purchase Orders 220-1301 Data (Matching screenshot)
         let purchaseOrders = [
-            { id: 101, pedido: "33424", tipoPedido: "Normal", filial: "1", codFornec: "5071", fornecedor: "BEBIDAS GRASSI DO BRASIL LTDA", dtEmissao: "2026-09-30", valorTotal: 132568.75, tipoEmbalagem: "Venda", rotina: "220", qtdItensAbertos: 6.00 },
-            { id: 102, pedido: "33603", tipoPedido: "Normal", filial: "1", codFornec: "5071", fornecedor: "BEBIDAS GRASSI DO BRASIL LTDA", dtEmissao: "2026-10-23", valorTotal: 17148.99, tipoEmbalagem: "Venda", rotina: "220", qtdItensAbertos: 21.00 },
-            { id: 103, pedido: "33561", tipoPedido: "Normal", filial: "1", codFornec: "1680", fornecedor: "BEM BRASIL ALIMENTOS LTDA", dtEmissao: "2026-10-19", valorTotal: 230085.00, tipoEmbalagem: "Venda", rotina: "220", qtdItensAbertos: 4.00 },
-            { id: 104, pedido: "33604", tipoPedido: "Normal", filial: "1", codFornec: "1680", fornecedor: "BEM BRASIL ALIMENTOS LTDA", dtEmissao: "2026-10-23", valorTotal: 12381.60, tipoEmbalagem: "Venda", rotina: "220", qtdItensAbertos: 1.00 },
-            { id: 105, pedido: "33605", tipoPedido: "Normal", filial: "1", codFornec: "1466", fornecedor: "BRF-BRASIL FOOD S.A", dtEmissao: "2026-10-23", valorTotal: 112496.63, tipoEmbalagem: "Venda", rotina: "220", qtdItensAbertos: 19.00 },
-            { id: 106, pedido: "33478", tipoPedido: "Normal", filial: "1", codFornec: "4645", fornecedor: "CELM - AQUICULTURA S/A", dtEmissao: "2026-10-08", valorTotal: 149804.00, tipoEmbalagem: "Venda", rotina: "220", qtdItensAbertos: 7.00 },
-            { id: 107, pedido: "33610", tipoPedido: "Normal", filial: "1", codFornec: "3458", fornecedor: "CERRADO FOODS LTDA", dtEmissao: "2026-10-24", valorTotal: 49835.82, tipoEmbalagem: "Venda", rotina: "220", qtdItensAbertos: 2.00 },
-            { id: 108, pedido: "33562", tipoPedido: "Normal", filial: "1", codFornec: "22", fornecedor: "COOPERATIVA AGROINDUSTRIAL LAR*", dtEmissao: "2026-10-19", valorTotal: 493922.50, tipoEmbalagem: "Venda", rotina: "220", qtdItensAbertos: 13.00 },
-            { id: 109, pedido: "33363", tipoPedido: "Normal", filial: "1", codFornec: "418", fornecedor: "COSTA SUL PESCADOS S/A *", dtEmissao: "2026-09-22", valorTotal: 55486.00, tipoEmbalagem: "Venda", rotina: "220", qtdItensAbertos: 8.00 },
-            { id: 110, pedido: "33455", tipoPedido: "Normal", filial: "1", codFornec: "418", fornecedor: "COSTA SUL PESCADOS S/A *", dtEmissao: "2026-10-06", valorTotal: 18873.71, tipoEmbalagem: "Venda", rotina: "220", qtdItensAbertos: 2.00 }
+            { id: 101, pedido: "33424", tipo: "Normal", filial: "1", codForn: "5071", fornecedor: "BEBIDAS GRASSI DO BRASIL LTDA", data: "2026-09-30", valor: 132568.75, embalagem: "Venda", rotina: "220" },
+            { id: 102, pedido: "33603", tipo: "Normal", filial: "1", codForn: "5071", fornecedor: "BEBIDAS GRASSI DO BRASIL LTDA", data: "2026-10-23", valor: 17148.99, embalagem: "Venda", rotina: "220" },
+            { id: 103, pedido: "33561", tipo: "Normal", filial: "1", codForn: "1680", fornecedor: "BEM BRASIL ALIMENTOS LTDA", data: "2026-10-19", valor: 230085.00, embalagem: "Venda", rotina: "220" },
+            { id: 104, pedido: "33604", tipo: "Normal", filial: "1", codForn: "1680", fornecedor: "BEM BRASIL ALIMENTOS LTDA", data: "2026-10-23", valor: 17381.60, embalagem: "Venda", rotina: "220" },
+            { id: 105, pedido: "33605", tipo: "Normal", filial: "1", codForn: "1466", fornecedor: "BRF-BRASIL FOOD S.A", data: "2026-10-23", valor: 112496.63, embalagem: "Venda", rotina: "220" },
+            { id: 106, pedido: "33478", tipo: "Normal", filial: "1", codForn: "4645", fornecedor: "CELM - AQUICULTURA S/A", data: "2026-10-08", valor: 149804.00, embalagem: "Venda", rotina: "220" },
+            { id: 107, pedido: "33610", tipo: "Normal", filial: "1", codForn: "3458", fornecedor: "CERRADO FOODS LTDA", data: "2026-10-24", valor: 9835.82, embalagem: "Venda", rotina: "220" },
+            { id: 108, pedido: "33562", tipo: "Normal", filial: "1", codForn: "22", fornecedor: "COOPERATIVA AGROINDUSTRIAL LAR*", data: "2026-10-19", valor: 93922.50, embalagem: "Venda", rotina: "220" },
+            { id: 109, pedido: "33363", tipo: "Normal", filial: "1", codForn: "418", fornecedor: "COSTA SUL PESCADOS S/A *", data: "2026-09-22", valor: 51486.00, embalagem: "Venda", rotina: "220" },
+            { id: 110, pedido: "33455", tipo: "Normal", filial: "1", codForn: "418", fornecedor: "COSTA SUL PESCADOS S/A *", data: "2026-10-06", valor: 18850.20, embalagem: "Venda", rotina: "220" }
         ];
 
         let budgetChartInstance = null;
-        let supplierChartInstance = null;
+        let categoryChartInstance = null;
 
-        // On Load
         window.onload = function() {
             lucide.createIcons();
             renderDashboard();
         };
 
-        // Format Currency
+        function triggerFileInput(type) {
+            if (type === '1313') {
+                document.getElementById('file-input-1313').click();
+            } else {
+                document.getElementById('file-input-220').click();
+            }
+        }
+
         function formatBRL(amount) {
             return new Intl.NumberFormat('pt-BR', {
                 style: 'currency',
@@ -481,9 +411,8 @@
             }).format(amount || 0);
         }
 
-        // Format Date BR
         function formatDateBR(dateStr) {
-            if (!dateStr) return '-';
+            if (!dateStr) return '';
             const parts = dateStr.split('-');
             if (parts.length === 3) {
                 return `${parts[2]}/${parts[1]}/${parts[0]}`;
@@ -491,424 +420,257 @@
             return dateStr;
         }
 
-        // Calculate Totals & Render Dashboard
         function renderDashboard() {
-            // Totals
             const totalUtilizado = invoices.reduce((acc, curr) => acc + curr.valor, 0);
-            const totalPedidos = purchaseOrders.reduce((acc, curr) => acc + curr.valorTotal, 0);
-            
-            // Total Comprometido = Utilizado + Pedidos + Pré Entrada + Outros Valores
+            const totalPedidos = purchaseOrders.reduce((acc, curr) => acc + curr.valor, 0);
             const totalComprometido = totalUtilizado + totalPedidos + budgetData.preEntrada + budgetData.outrosValores;
             const saldoFinal = budgetData.orcamento - totalComprometido;
-            const percentComprometido = ((totalComprometido / budgetData.orcamento) * 100).toFixed(2);
+            const percentualComprometido = ((totalComprometido / budgetData.orcamento) * 100).toFixed(2);
 
-            const totalDocsCount = invoices.length + purchaseOrders.length;
-            const ticketMedio = totalDocsCount > 0 ? totalComprometido / totalDocsCount : 0;
-
-            // Render Resumo Cards (Matching Excel)
             document.getElementById('card-orcamento').innerText = formatBRL(budgetData.orcamento);
             document.getElementById('card-utilizado').innerText = formatBRL(totalUtilizado);
             document.getElementById('card-pedidos').innerText = formatBRL(totalPedidos);
-            document.getElementById('card-pre-entrada').innerText = formatBRL(budgetData.preEntrada);
+            document.getElementById('card-preentrada').innerText = formatBRL(budgetData.preEntrada);
             document.getElementById('card-outros').innerText = formatBRL(budgetData.outrosValores);
-            document.getElementById('card-saldo-final').innerText = formatBRL(saldoFinal);
+            document.getElementById('card-saldo').innerText = formatBRL(saldoFinal);
+            document.getElementById('card-percentual').innerText = `${percentualComprometido}%`;
             document.getElementById('card-projecao').innerText = formatBRL(budgetData.projecaoFat);
-            document.getElementById('card-percentual').innerText = `${percentComprometido.replace('.', ',')}%`;
+            document.getElementById('card-total-comprometido').innerText = formatBRL(totalComprometido);
             document.getElementById('card-atualizacao').innerText = budgetData.atualizacao;
 
-            // Render KPI Cards
-            document.getElementById('kpi-qtd-entradas').innerText = `${invoices.length} Notas`;
-            document.getElementById('kpi-val-entradas').innerText = formatBRL(totalUtilizado);
-            document.getElementById('kpi-qtd-pedidos').innerText = `${purchaseOrders.length} Pedidos`;
-            document.getElementById('kpi-val-pedidos').innerText = formatBRL(totalPedidos);
-            document.getElementById('kpi-val-pre-kpi').innerText = formatBRL(budgetData.preEntrada);
-            document.getElementById('kpi-ticket-medio').innerText = formatBRL(ticketMedio);
+            document.getElementById('tab-count-1313').innerText = invoices.length;
+            document.getElementById('tab-count-220').innerText = purchaseOrders.length;
 
-            // Badges Count
-            document.getElementById('badge-count-entries').innerText = invoices.length;
-            document.getElementById('badge-count-orders').innerText = purchaseOrders.length;
-
-            // Render Current Table based on tab
             renderTable();
-
-            // Render Charts
             renderCharts(totalUtilizado, totalPedidos, budgetData.preEntrada, saldoFinal);
         }
 
-        // Tab Switching
         function switchTab(tab) {
-            activeTab = tab;
+            currentTab = tab;
+            const btn1313 = document.getElementById('tab-btn-1313');
+            const btn220 = document.getElementById('tab-btn-220');
 
-            const btnEntries = document.getElementById('tab-btn-entries');
-            const btnOrders = document.getElementById('tab-btn-orders');
-
-            if (tab === 'entries') {
-                btnEntries.className = "py-2.5 px-4 font-bold text-sm border-b-2 border-indigo-600 text-indigo-600 flex items-center space-x-2 transition";
-                btnOrders.className = "py-2.5 px-4 font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2 transition";
+            if (tab === '1313') {
+                btn1313.className = "px-3 py-1.5 text-xs font-bold rounded-md bg-white text-indigo-900 shadow-sm transition";
+                btn220.className = "px-3 py-1.5 text-xs font-bold rounded-md text-slate-600 hover:text-slate-900 transition";
             } else {
-                btnOrders.className = "py-2.5 px-4 font-bold text-sm border-b-2 border-amber-600 text-amber-600 flex items-center space-x-2 transition";
-                btnEntries.className = "py-2.5 px-4 font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2 transition";
+                btn220.className = "px-3 py-1.5 text-xs font-bold rounded-md bg-white text-purple-900 shadow-sm transition";
+                btn1313.className = "px-3 py-1.5 text-xs font-bold rounded-md text-slate-600 hover:text-slate-900 transition";
             }
 
             renderTable();
         }
 
-        // Render Active Table Content
         function renderTable() {
-            const thead = document.getElementById('table-head');
-            const tbody = document.getElementById('table-tbody');
-            const searchVal = document.getElementById('table-search').value.toLowerCase();
-
+            const headRow = document.getElementById('table-head-row');
+            const tbody = document.getElementById('data-tbody');
             tbody.innerHTML = '';
 
-            if (activeTab === 'entries') {
-                // Table Header for Entries
-                thead.innerHTML = `
-                    <tr class="bg-slate-100/80 border-b border-slate-200 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                        <th class="py-3 px-4">Data</th>
-                        <th class="py-3 px-4">Nº NF-e</th>
-                        <th class="py-3 px-4">Cód. Fornec.</th>
-                        <th class="py-3 px-4">Fornecedor</th>
-                        <th class="py-3 px-4">Rotina</th>
-                        <th class="py-3 px-4 text-right">Valor Total (R$)</th>
-                        <th class="py-3 px-4 text-center">Status</th>
-                        <th class="py-3 px-4 text-center">Ações</th>
-                    </tr>
+            const query = (document.getElementById('table-search').value || '').toLowerCase();
+            let sumTotal = 0;
+            let displayCount = 0;
+
+            if (currentTab === '1313') {
+                headRow.innerHTML = `
+                    <th class="py-2.5 px-3">Data Emissão</th>
+                    <th class="py-2.5 px-3">Nº Nota Fiscal</th>
+                    <th class="py-2.5 px-3">Cód. Forn.</th>
+                    <th class="py-2.5 px-3">Fornecedor / Razão Social</th>
+                    <th class="py-2.5 px-3 text-right">Valor Total (R$)</th>
+                    <th class="py-2.5 px-3 text-center">Ações</th>
                 `;
 
-                const filtered = invoices.filter(i => 
-                    i.fornecedor.toLowerCase().includes(searchVal) || 
-                    i.nfe.toLowerCase().includes(searchVal) ||
-                    (i.codFornec && i.codFornec.includes(searchVal))
+                const filtered = invoices.filter(inv => 
+                    inv.fornecedor.toLowerCase().includes(query) ||
+                    inv.nfe.toLowerCase().includes(query) ||
+                    inv.codForn.toLowerCase().includes(query)
                 );
 
-                let sum = 0;
+                displayCount = filtered.length;
                 filtered.forEach(inv => {
-                    sum += inv.valor;
+                    sumTotal += inv.valor;
                     const tr = document.createElement('tr');
                     tr.className = "hover:bg-slate-50 transition text-slate-700";
                     tr.innerHTML = `
-                        <td class="py-3 px-4 font-medium text-slate-900">${formatDateBR(inv.data)}</td>
-                        <td class="py-3 px-4 font-mono text-xs font-bold text-indigo-700">${inv.nfe}</td>
-                        <td class="py-3 px-4 font-mono text-xs text-slate-500">${inv.codFornec || '-'}</td>
-                        <td class="py-3 px-4 font-semibold">${inv.fornecedor}</td>
-                        <td class="py-3 px-4"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-xs font-mono">${inv.rotina}</span></td>
-                        <td class="py-3 px-4 text-right font-extrabold text-slate-900">${formatBRL(inv.valor)}</td>
-                        <td class="py-3 px-4 text-center">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-800">
-                                ${inv.status}
-                            </span>
-                        </td>
-                        <td class="py-3 px-4 text-center">
-                            <button onclick="deleteEntry(${inv.id}, 'entries')" class="text-slate-400 hover:text-red-600 transition" title="Excluir">
+                        <td class="py-2.5 px-3 font-medium text-slate-900">${formatDateBR(inv.data)}</td>
+                        <td class="py-2.5 px-3 font-mono text-indigo-950 font-bold">${inv.nfe}</td>
+                        <td class="py-2.5 px-3 font-mono text-slate-500">${inv.codForn}</td>
+                        <td class="py-2.5 px-3 font-semibold text-slate-800">${inv.fornecedor}</td>
+                        <td class="py-2.5 px-3 text-right font-bold text-slate-900">${formatBRL(inv.valor)}</td>
+                        <td class="py-2.5 px-3 text-center">
+                            <button type="button" onclick="deleteRecord('1313', ${inv.id})" class="text-slate-400 hover:text-rose-600 transition" title="Excluir">
                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
                         </td>
                     `;
                     tbody.appendChild(tr);
                 });
-
-                document.getElementById('record-count').innerText = `Exibindo ${filtered.length} de ${invoices.length} notas de entrada`;
-                document.getElementById('table-total-sum').innerText = `Total Exibido: ${formatBRL(sum)}`;
 
             } else {
-                // Table Header for Purchase Orders (Matching user screenshot)
-                thead.innerHTML = `
-                    <tr class="bg-amber-50/60 border-b border-amber-200/60 text-xs font-semibold text-slate-700 uppercase tracking-wider">
-                        <th class="py-3 px-4">Pedido</th>
-                        <th class="py-3 px-4">Tipo</th>
-                        <th class="py-3 px-4">Cód. Fornec.</th>
-                        <th class="py-3 px-4">Fornecedor</th>
-                        <th class="py-3 px-4">Dt. Emissão</th>
-                        <th class="py-3 px-4 text-right">Vl. Total (R$)</th>
-                        <th class="py-3 px-4 text-center">Rotina</th>
-                        <th class="py-3 px-4 text-center">Itens Abertos</th>
-                        <th class="py-3 px-4 text-center">Ações</th>
-                    </tr>
+                headRow.innerHTML = `
+                    <th class="py-2.5 px-3">Pedido</th>
+                    <th class="py-2.5 px-3">Tipo</th>
+                    <th class="py-2.5 px-3">Filial</th>
+                    <th class="py-2.5 px-3">Cód. Forn.</th>
+                    <th class="py-2.5 px-3">Fornecedor</th>
+                    <th class="py-2.5 px-3">Dt. Emissão</th>
+                    <th class="py-2.5 px-3 text-right">Vl. Total (R$)</th>
+                    <th class="py-2.5 px-3 text-center">Rotina</th>
+                    <th class="py-2.5 px-3 text-center">Ações</th>
                 `;
 
-                const filtered = purchaseOrders.filter(p => 
-                    p.fornecedor.toLowerCase().includes(searchVal) || 
-                    p.pedido.toLowerCase().includes(searchVal) ||
-                    (p.codFornec && p.codFornec.includes(searchVal))
+                const filtered = purchaseOrders.filter(po => 
+                    po.fornecedor.toLowerCase().includes(query) ||
+                    po.pedido.toLowerCase().includes(query) ||
+                    po.codForn.toLowerCase().includes(query)
                 );
 
-                let sum = 0;
-                filtered.forEach(ord => {
-                    sum += ord.valorTotal;
+                displayCount = filtered.length;
+                filtered.forEach(po => {
+                    sumTotal += po.valor;
                     const tr = document.createElement('tr');
-                    tr.className = "hover:bg-amber-50/30 transition text-slate-700";
+                    tr.className = "hover:bg-purple-50/50 transition text-slate-700";
                     tr.innerHTML = `
-                        <td class="py-3 px-4 font-mono font-bold text-amber-800">${ord.pedido}</td>
-                        <td class="py-3 px-4 text-xs text-slate-500">${ord.tipoPedido || 'Normal'}</td>
-                        <td class="py-3 px-4 font-mono text-xs font-semibold text-slate-600">${ord.codFornec}</td>
-                        <td class="py-3 px-4 font-semibold text-slate-800">${ord.fornecedor}</td>
-                        <td class="py-3 px-4">${formatDateBR(ord.dtEmissao)}</td>
-                        <td class="py-3 px-4 text-right font-extrabold text-amber-950">${formatBRL(ord.valorTotal)}</td>
-                        <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded text-xs font-mono font-bold">${ord.rotina}</span></td>
-                        <td class="py-3 px-4 text-center font-medium">${ord.qtdItensAbertos ? ord.qtdItensAbertos.toFixed(2) : '-'}</td>
-                        <td class="py-3 px-4 text-center">
-                            <button onclick="deleteEntry(${ord.id}, 'orders')" class="text-slate-400 hover:text-red-600 transition" title="Excluir">
+                        <td class="py-2.5 px-3 font-bold text-purple-950 font-mono">${po.pedido}</td>
+                        <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded-full text-[10px] bg-slate-100 font-medium">${po.tipo}</span></td>
+                        <td class="py-2.5 px-3">${po.filial}</td>
+                        <td class="py-2.5 px-3 font-mono text-slate-500">${po.codForn}</td>
+                        <td class="py-2.5 px-3 font-semibold text-slate-800">${po.fornecedor}</td>
+                        <td class="py-2.5 px-3">${formatDateBR(po.data)}</td>
+                        <td class="py-2.5 px-3 text-right font-bold text-slate-900">${formatBRL(po.valor)}</td>
+                        <td class="py-2.5 px-3 text-center font-mono text-xs text-purple-800">${po.rotina}</td>
+                        <td class="py-2.5 px-3 text-center">
+                            <button type="button" onclick="deleteRecord('220', ${po.id})" class="text-slate-400 hover:text-rose-600 transition" title="Excluir">
                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
                         </td>
                     `;
                     tbody.appendChild(tr);
                 });
-
-                document.getElementById('record-count').innerText = `Exibindo ${filtered.length} de ${purchaseOrders.length} pedidos pendentes`;
-                document.getElementById('table-total-sum').innerText = `Total Exibido: ${formatBRL(sum)}`;
             }
 
+            document.getElementById('record-count').innerText = `Exibindo ${displayCount} registro(s)`;
+            document.getElementById('table-total-sum').innerText = `Total Exibido: ${formatBRL(sumTotal)}`;
             lucide.createIcons();
         }
 
-        // Filter Function
         function filterTable() {
             renderTable();
         }
 
-        // Render Charts using Chart.js
-        function renderCharts(totalUtilizado, totalPedidos, preEntrada, saldoFinal) {
-            // Chart 1: Bar Chart Budget vs Components
-            const ctx1 = document.getElementById('budgetChart').getContext('2d');
-            if (budgetChartInstance) budgetChartInstance.destroy();
-
-            budgetChartInstance = new Chart(ctx1, {
-                type: 'bar',
-                data: {
-                    labels: ['Orçamento Total', 'Entradas (1313)', 'Pedidos (220-1301)', 'Pré-Entrada', 'Saldo Final'],
-                    datasets: [{
-                        data: [budgetData.orcamento, totalUtilizado, totalPedidos, preEntrada, saldoFinal],
-                        backgroundColor: ['#e9d8a6', '#8b5cf6', '#f59e0b', '#0ea5e9', '#10b981'],
-                        borderRadius: 6,
-                        barThickness: 36
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return ' Valor: ' + formatBRL(context.raw);
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return 'R$ ' + (value / 1000000).toFixed(1) + 'M';
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-
-            // Chart 2: Top Suppliers Doughnut Chart
-            const ctx2 = document.getElementById('supplierChart').getContext('2d');
-            if (supplierChartInstance) supplierChartInstance.destroy();
-
-            // Aggregate totals per supplier across both tables
-            const supplierMap = {};
-            invoices.forEach(i => {
-                supplierMap[i.fornecedor] = (supplierMap[i.fornecedor] || 0) + i.valor;
-            });
-            purchaseOrders.forEach(p => {
-                supplierMap[p.fornecedor] = (supplierMap[p.fornecedor] || 0) + p.valorTotal;
-            });
-
-            // Sort & take top 5
-            const sortedSuppliers = Object.entries(supplierMap)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 5);
-
-            const labels = sortedSuppliers.map(s => s[0].length > 18 ? s[0].substring(0, 18) + '...' : s[0]);
-            const dataValues = sortedSuppliers.map(s => s[1]);
-
-            supplierChartInstance = new Chart(ctx2, {
-                type: 'doughnut',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: dataValues,
-                        backgroundColor: ['#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899', '#10b981'],
-                        borderWidth: 2,
-                        borderColor: '#ffffff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { boxWidth: 10, font: { size: 10 } }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return ' ' + context.label + ': ' + formatBRL(context.raw);
-                                }
-                            }
-                        }
-                    },
-                    cutout: '65%'
-                }
-            });
+        function confirmClearInvoices() {
+            document.getElementById('modal-confirm-clear').classList.remove('hidden');
         }
 
-        // Open Import Dialog
-        function openImportModal(type) {
-            if (type === 'entries') {
-                document.getElementById('file-input-entries').click();
+        function executeClearInvoices() {
+            invoices = [];
+            closeModal('modal-confirm-clear');
+            renderDashboard();
+            showToast("Todas as Notas de Entrada (1313) foram limpas!");
+        }
+
+        function deleteRecord(type, id) {
+            if (type === '1313') {
+                invoices = invoices.filter(i => i.id !== id);
             } else {
-                document.getElementById('file-input-orders').click();
+                purchaseOrders = purchaseOrders.filter(p => p.id !== id);
+            }
+            renderDashboard();
+            showToast("Registro removido com sucesso.");
+        }
+
+        function handleFileSelect(event, type) {
+            const files = event.target.files;
+            if (files.length > 0) {
+                processFile(files[0], type);
             }
         }
 
-        // Process Excel Files for both Entries and Purchase Orders
-        function handleFileSelect(event, targetType) {
-            const files = event.target.files;
-            if (files.length === 0) return;
-
-            const file = files[0];
+        function processFile(file, type) {
             const reader = new FileReader();
 
             reader.onload = function(e) {
                 try {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
-                    const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const json = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
 
                     if (json.length < 2) {
                         showToast("Planilha vazia ou com formato inválido.", "error");
                         return;
                     }
 
-                    if (targetType === 'orders') {
-                        // Mapeamento específico para a planilha de PEDIDOS DE COMPRA (igual imagem fornecida)
-                        // Colunas apontadas: Col A (Pedido), Col D (Cód.Fornec), Col E (Fornecedor), Col F (Dt.Emissão), Col G (Vl. Total)
-                        let newOrders = [];
-                        
-                        // Encontrar linha de cabeçalho
-                        let headerIdx = 0;
-                        for (let r = 0; r < Math.min(5, json.length); r++) {
-                            const rowStr = JSON.stringify(json[r]).toLowerCase();
-                            if (rowStr.includes('pedido') || rowStr.includes('fornecedor')) {
-                                headerIdx = r;
-                                break;
-                            }
-                        }
-
-                        for (let i = headerIdx + 1; i < json.length; i++) {
-                            const row = json[i];
-                            if (!row || row.length === 0) continue;
-
-                            const pedidoNum = row[0] ? String(row[0]).trim() : '';
-                            const codFornec = row[3] ? String(row[3]).trim() : '';
-                            const fornecedorName = row[4] ? String(row[4]).trim() : '';
-                            const dtEmissaoRaw = row[5];
-                            const valorTotal = parseFloat(String(row[6]).replace('R$', '').replace(/\./g, '').replace(',', '.')) || 0;
-
-                            if (pedidoNum || valorTotal > 0) {
-                                newOrders.push({
-                                    id: Date.now() + i,
-                                    pedido: pedidoNum || `P-${i}`,
-                                    tipoPedido: row[1] ? String(row[1]) : "Normal",
-                                    filial: row[2] ? String(row[2]) : "1",
-                                    codFornec: codFornec || "0",
-                                    fornecedor: fornecedorName || "FORNECEDOR IMPORTADO",
-                                    dtEmissao: parseExcelDate(dtEmissaoRaw),
-                                    valorTotal: valorTotal,
-                                    tipoEmbalagem: row[7] ? String(row[7]) : "Venda",
-                                    rotina: row[8] ? String(row[8]) : "220",
-                                    qtdItensAbertos: parseFloat(row[9]) || 0
-                                });
-                            }
-                        }
-
-                        if (newOrders.length > 0) {
-                            purchaseOrders = newOrders;
-                            switchTab('orders');
-                            renderDashboard();
-                            showToast(`${newOrders.length} pedidos de compra importados!`);
-                        } else {
-                            showToast("Não foi possível identificar colunas de Pedidos.", "error");
-                        }
-
-                    } else {
-                        // Mapeamento para NOTAS DE ENTRADA (1313)
-                        let newEntries = [];
+                    if (type === '1313') {
+                        let imported = [];
                         for (let i = 1; i < json.length; i++) {
                             const row = json[i];
                             if (!row || row.length === 0) continue;
-
-                            const valor = parseFloat(String(row[4] || row[5] || row[3] || 0).replace('R$', '').replace(/\./g, '').replace(',', '.')) || 0;
+                            const valor = parseFloat(row[4] || row[3] || row[2] || 0) || 0;
                             if (valor > 0) {
-                                newEntries.push({
+                                imported.push({
                                     id: Date.now() + i,
-                                    data: parseExcelDate(row[0]),
+                                    data: row[0] ? String(row[0]).split('T')[0] : "2026-10-23",
                                     nfe: String(row[1] || `NF-${Math.floor(10000 + Math.random() * 90000)}`),
-                                    codFornec: String(row[2] || "0"),
-                                    fornecedor: String(row[3] || row[2] || "FORNECEDOR IMPORTADO"),
+                                    codForn: String(row[2] || "0000"),
+                                    fornecedor: String(row[3] || row[2] || "Fornecedor Importado"),
+                                    valor: valor
+                                });
+                            }
+                        }
+                        if (imported.length > 0) {
+                            invoices = imported;
+                            switchTab('1313');
+                            renderDashboard();
+                            showToast(`${imported.length} notas importadas com sucesso!`);
+                        }
+                    } else {
+                        // Map Columns matching user screenshot (A: Pedido, D: Cód.Forn, E: Fornecedor, F: Dt.Emissão, G: Vl. Total)
+                        let importedOrders = [];
+                        for (let i = 1; i < json.length; i++) {
+                            const row = json[i];
+                            if (!row || row.length === 0) continue;
+                            
+                            const pedido = String(row[0] || '').trim();
+                            const codForn = String(row[3] || '').trim();
+                            const fornecedor = String(row[4] || '').trim();
+                            const valorRaw = row[6] || row[5] || 0;
+                            const valor = typeof valorRaw === 'number' ? valorRaw : parseFloat(String(valorRaw).replace(/\./g,'').replace(',','.')) || 0;
+
+                            if (pedido || valor > 0) {
+                                importedOrders.push({
+                                    id: Date.now() + i,
+                                    pedido: pedido || `P-${1000 + i}`,
+                                    tipo: String(row[1] || "Normal"),
+                                    filial: String(row[2] || "1"),
+                                    codForn: codForn || "0",
+                                    fornecedor: fornecedor || "Fornecedor Pedido",
+                                    data: row[5] ? String(row[5]).split('T')[0] : "2026-10-23",
                                     valor: valor,
-                                    rotina: "1313",
-                                    status: "Processado"
+                                    embalagem: String(row[7] || "Venda"),
+                                    rotina: String(row[8] || "220")
                                 });
                             }
                         }
 
-                        if (newEntries.length > 0) {
-                            invoices = newEntries;
-                            switchTab('entries');
+                        if (importedOrders.length > 0) {
+                            purchaseOrders = importedOrders;
+                            switchTab('220');
                             renderDashboard();
-                            showToast(`${newEntries.length} notas de entrada importadas!`);
-                        } else {
-                            showToast("Nenhum registro de entrada válido encontrado.", "error");
+                            showToast(`${importedOrders.length} pedidos importados com sucesso!`);
                         }
                     }
 
                 } catch (err) {
                     console.error(err);
-                    showToast("Erro ao processar arquivo. Verifique se o formato está correto.", "error");
+                    showToast("Erro ao processar planilha.", "error");
                 }
             };
 
             reader.readAsArrayBuffer(file);
         }
 
-        // Helper: Parse Date from Excel JS
-        function parseExcelDate(val) {
-            if (!val) return "2026-10-24";
-            if (typeof val === 'string') {
-                if (val.includes('/')) {
-                    const parts = val.split('/');
-                    if (parts.length === 3) return `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
-                }
-                return val.split('T')[0];
-            }
-            if (typeof val === 'number') {
-                const date = new Date((val - (25567 + 2)) * 86400 * 1000);
-                return date.toISOString().split('T')[0];
-            }
-            return "2026-10-24";
-        }
-
-        // Modal Control
         function openModal(id) {
-            document.getElementById('form-add-entry').reset();
-            document.getElementById('entry-id').value = '';
-            document.getElementById('input-doc-type').value = activeTab === 'orders' ? 'order' : 'entry';
-            toggleFormFields();
             document.getElementById(id).classList.remove('hidden');
         }
 
@@ -917,147 +679,133 @@
         }
 
         function toggleFormFields() {
-            const type = document.getElementById('input-doc-type').value;
-            const labelNum = document.getElementById('label-num-doc');
-            const rotinaInput = document.getElementById('input-rotina');
-
-            if (type === 'order') {
-                labelNum.innerText = "Nº do Pedido";
-                rotinaInput.value = "220";
-            } else {
-                labelNum.innerText = "Nº da NF-e";
-                rotinaInput.value = "1313";
-            }
+            const type = document.getElementById('input-type').value;
+            const lblCode = document.getElementById('lbl-code');
+            lblCode.innerText = type === '1313' ? 'Nº Nota Fiscal' : 'Nº do Pedido';
         }
 
         function handleSaveEntry(e) {
             e.preventDefault();
-            const docType = document.getElementById('input-doc-type').value;
+            const type = document.getElementById('input-type').value;
+            const code = document.getElementById('input-code').value;
             const dateVal = document.getElementById('input-date').value;
-            const docNum = document.getElementById('input-doc-num').value;
-            const supplierCode = document.getElementById('input-supplier-code').value;
-            const supplierVal = document.getElementById('input-supplier').value;
+            const codForn = document.getElementById('input-codforn').value;
+            const supplier = document.getElementById('input-supplier').value;
             const valueVal = parseFloat(document.getElementById('input-value').value) || 0;
-            const rotinaVal = document.getElementById('input-rotina').value || (docType === 'order' ? '220' : '1313');
 
-            if (docType === 'order') {
-                purchaseOrders.unshift({
-                    id: Date.now(),
-                    pedido: docNum,
-                    tipoPedido: "Normal",
-                    filial: "1",
-                    codFornec: supplierCode || "0",
-                    fornecedor: supplierVal,
-                    dtEmissao: dateVal,
-                    valorTotal: valueVal,
-                    rotina: rotinaVal,
-                    qtdItensAbertos: 1.00
-                });
-                switchTab('orders');
-                showToast("Pedido de compra adicionado!");
-            } else {
+            if (type === '1313') {
                 invoices.unshift({
                     id: Date.now(),
                     data: dateVal,
-                    nfe: docNum,
-                    codFornec: supplierCode || "0",
-                    fornecedor: supplierVal,
+                    nfe: code,
+                    codForn: codForn,
+                    fornecedor: supplier,
+                    valor: valueVal
+                });
+                switchTab('1313');
+            } else {
+                purchaseOrders.unshift({
+                    id: Date.now(),
+                    pedido: code,
+                    tipo: "Normal",
+                    filial: "1",
+                    codForn: codForn,
+                    fornecedor: supplier,
+                    data: dateVal,
                     valor: valueVal,
-                    rotina: rotinaVal,
-                    status: "Processado"
+                    embalagem: "Venda",
+                    rotina: "220"
                 });
-                switchTab('entries');
-                showToast("Nota de entrada adicionada!");
+                switchTab('220');
             }
 
-        // Limpar todas as notas de entrada (1313)
-        function clearEntries1313() {
-            if (invoices.length === 0) {
-                showToast("Não há notas de entrada (1313) para limpar.", "error");
-                return;
-            }
-            openModal('modal-confirm-clear');
-        }
-
-        function executeClearEntries1313() {
-            const count = invoices.length;
-            invoices = [];
-            closeModal('modal-confirm-clear');
+            closeModal('modal-add-entry');
             renderDashboard();
-            showToast(`${count} notas de entrada (1313) foram limpas com sucesso!`);
+            showToast("Lançamento efetuado com sucesso!");
         }
 
-        function deleteEntry(id, type) {
-            if (type === 'entries') {
-                invoices = invoices.filter(i => i.id !== id);
-                showToast("Nota de entrada removida.");
-            } else {
-                purchaseOrders = purchaseOrders.filter(p => p.id !== id);
-                showToast("Pedido removido.");
-            }
-            renderDashboard();
+        function renderCharts(totalUtilizado, totalPedidos, preEntrada, saldoFinal) {
+            const ctx1 = document.getElementById('budgetChart').getContext('2d');
+            if (budgetChartInstance) budgetChartInstance.destroy();
+
+            budgetChartInstance = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: ['Utilizado (1313)', 'Pedidos (220-1301)', 'Pré Entrada', 'Saldo Restante'],
+                    datasets: [{
+                        data: [totalUtilizado, totalPedidos, preEntrada, Math.max(0, saldoFinal)],
+                        backgroundColor: ['#7e22ce', '#a855f7', '#c084fc', '#f59e0b'],
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            ticks: {
+                                callback: function(v) { return 'R$ ' + (v / 1000000).toFixed(1) + 'M'; }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const ctx2 = document.getElementById('categoryChart').getContext('2d');
+            if (categoryChartInstance) categoryChartInstance.destroy();
+
+            categoryChartInstance = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Notas 1313', 'Pedidos 220-1301', 'Pré Entrada', 'Saldo Restante'],
+                    datasets: [{
+                        data: [totalUtilizado, totalPedidos, preEntrada, Math.max(0, saldoFinal)],
+                        backgroundColor: ['#6b21a8', '#9333ea', '#c084fc', '#fef3c7'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } }
+                    },
+                    cutout: '65%'
+                }
+            });
         }
 
-        function editOutrosValores() {
-            const current = budgetData.outrosValores;
-            const newVal = prompt("Informe o valor para 'OUTROS VALORES' (R$):", current);
-            if (newVal !== null) {
-                budgetData.outrosValores = parseFloat(newVal) || 0;
-                renderDashboard();
-                showToast("Outros valores atualizados!");
-            }
-        }
-
-        // Export active table to CSV
         function exportToCSV() {
-            let csv = "";
-            if (activeTab === 'entries') {
-                csv = "Data;NFe;CodFornecedor;Fornecedor;Rotina;Valor;Status\n";
-                invoices.forEach(i => {
-                    csv += `${i.data};${i.nfe};${i.codFornec};${i.fornecedor};${i.rotina};${i.valor};${i.status}\n`;
-                });
+            let csvContent = "data:text/csv;charset=utf-8,";
+            if (currentTab === '1313') {
+                csvContent += "Data;NFe;CodForn;Fornecedor;Valor\n";
+                invoices.forEach(i => csvContent += `${i.data};${i.nfe};${i.codForn};${i.fornecedor};${i.valor}\n`);
             } else {
-                csv = "Pedido;Tipo;Filial;CodFornecedor;Fornecedor;DtEmissao;ValorTotal;Rotina\n";
-                purchaseOrders.forEach(p => {
-                    csv += `${p.pedido};${p.tipoPedido};${p.filial};${p.codFornec};${p.fornecedor};${p.dtEmissao};${p.valorTotal};${p.rotina}\n`;
-                });
+                csvContent += "Pedido;Tipo;Filial;CodForn;Fornecedor;Data;Valor;Rotina\n";
+                purchaseOrders.forEach(p => csvContent += `${p.pedido};${p.tipo};${p.filial};${p.codForn};${p.fornecedor};${p.data};${p.valor};${p.rotina}\n`);
             }
 
-            const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csv);
+            const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `relatorio_${activeTab}_${budgetData.atualizacao.replace(/\//g,'-')}.csv`);
+            link.setAttribute("download", `orcamento_${currentTab}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-
-            showToast("Relatório CSV gerado e baixado!");
         }
 
-        // Toast Feedback
         function showToast(message, type = "success") {
             const toast = document.getElementById('toast');
             const toastMsg = document.getElementById('toast-message');
-            const toastIcon = document.getElementById('toast-icon');
-
             toastMsg.innerText = message;
-            
-            if (type === "error") {
-                toastIcon.setAttribute('data-lucide', 'alert-circle');
-                toastIcon.className = "w-5 h-5 text-red-400";
-            } else {
-                toastIcon.setAttribute('data-lucide', 'check-circle');
-                toastIcon.className = "w-5 h-5 text-emerald-400";
-            }
-            lucide.createIcons();
-
             toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-4');
             toast.classList.add('opacity-100', 'translate-y-0');
 
             setTimeout(() => {
                 toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-4');
                 toast.classList.remove('opacity-100', 'translate-y-0');
-            }, 3500);
+            }, 3000);
         }
     </script>
 </body>
