@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acompanhamento de Orçamento - Compras</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- SheetJS para leitura de XLSX/CSV -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        excelPurple: '#d9d2e9',
+                        excelPurpleDark: '#5f4b8b',
+                        excelBlue: '#cfe2f3',
+                        brandBlue: '#1e3a8a',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for clean visual appearance */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
+
+    <!-- Header Navigation -->
+    <header class="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-30 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-indigo-600 rounded-lg text-white">
+                    <i data-lucide="wallet" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight">Orçamento de Compras</h1>
+                    <p class="text-xs text-slate-400">Acompanhamento de Entradas - Outubro/2026</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-3">
+                <!-- Dropzone / Quick Action Button -->
+                <button onclick="document.getElementById('file-input').click()" class="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition shadow-sm">
+                    <i data-lucide="upload" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Importar Planilha</span>
+                </button>
+                <input type="file" id="file-input" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleFileSelect(event)">
+                
+                <button onclick="openModal('modal-add-entry')" class="flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-sm font-medium py-2 px-4 rounded-lg transition">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Nova Nota</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- Spreadsheet Standardized Summary Banner (Matching image structure) -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 overflow-x-auto">
+            <div class="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+                <div class="flex items-center space-x-2">
+                    <i data-lucide="table" class="w-5 h-5 text-indigo-600"></i>
+                    <h2 class="font-semibold text-slate-800">Resumo Orçamentário (Outubro)</h2>
+                </div>
+                <div class="text-xs text-slate-500 flex items-center gap-1">
+                    <i data-lucide="info" class="w-3.5 h-3.5"></i>
+                    Valores extraídos e consolidados em tempo real
+                </div>
+            </div>
+
+            <!-- Spreadsheet Grid Recreation -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 min-w-[640px]">
+                
+                <!-- ORÇAMENTO -->
+                <div class="bg-[#e9d8a6]/20 border border-[#ee9b00]/30 rounded-lg p-3 relative group hover:shadow-md transition">
+                    <div class="text-xs font-bold text-slate-600 uppercase tracking-wider mb-1 flex justify-between items-center">
+                        <span>ORÇAMENTO</span>
+                        <i data-lucide="dollar-sign" class="w-4 h-4 text-amber-600"></i>
+                    </div>
+                    <div class="text-xl font-extrabold text-slate-900" id="card-orcamento">
+                        R$ 16.561.275,00
+                    </div>
+                    <div class="text-[10px] text-slate-500 mt-1">Limite mensal planejado</div>
+                </div>
+
+                <!-- UTILIZADO 1313 -->
+                <div class="bg-purple-100/70 border border-purple-200 rounded-lg p-3 relative group hover:shadow-md transition">
+                    <div class="text-xs font-bold text-purple-900 uppercase tracking-wider mb-1 flex justify-between items-center">
+                        <span>UTILIZADO 1313</span>
+                        <i data-lucide="shopping-bag" class="w-4 h-4 text-purple-700"></i>
+                    </div>
+                    <div class="text-xl font-extrabold text-purple-950" id="card-utilizado">
+                        R$ 13.670.785,00
+                    </div>
+                    <div class="text-[10px] text-purple-700 mt-1 flex justify-between">
+                        <span>Comprometido no mês</span>
+                        <span id="percent-utilizado" class="font-bold">82.5%</span>
+                    </div>
+                </div>
+
+                <!-- PROJEÇÃO FAT -->
+                <div class="bg-purple-200/80 border border-purple-300 rounded-lg p-3 relative group hover:shadow-md transition">
+                    <div class="text-xs font-bold text-purple-950 uppercase tracking-wider mb-1 flex justify-between items-center">
+                        <span>PROJEÇÃO FAT</span>
+                        <i data-lucide="trending-up" class="w-4 h-4 text-purple-800"></i>
+                    </div>
+                    <div class="text-xl font-extrabold text-purple-950" id="card-projecao">
+                        R$ 24.001.848,00
+                    </div>
+                    <div class="text-[10px] text-purple-800 mt-1">Estimativa de Faturamento</div>
+                </div>
+
+                <!-- ATUALIZAÇÃO -->
+                <div class="bg-sky-100/70 border border-sky-200 rounded-lg p-3 relative group hover:shadow-md transition">
+                    <div class="text-xs font-bold text-sky-900 uppercase tracking-wider mb-1 flex justify-between items-center">
+                        <span>ATUALIZAÇÃO</span>
+                        <i data-lucide="calendar" class="w-4 h-4 text-sky-700"></i>
+                    </div>
+                    <div class="text-xl font-extrabold text-sky-950" id="card-atualizacao">
+                        23/10/2026
+                    </div>
+                    <div class="text-[10px] text-sky-700 mt-1">Status mais recente</div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Additional Key Metrics / Indicators -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            
+            <!-- Saldo Disponível -->
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <span class="text-xs font-medium text-slate-500 uppercase tracking-wider">Saldo Disponível</span>
+                    <h3 class="text-2xl font-bold text-emerald-600 mt-1" id="kpi-saldo">R$ 2.890.490,00</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Orçamento restando para Outubro</p>
+                </div>
+                <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+                    <i data-lucide="piggy-bank" class="w-6 h-6"></i>
+                </div>
+            </div>
+
+            <!-- Qtd de Notas Entradas -->
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <span class="text-xs font-medium text-slate-500 uppercase tracking-wider">Notas Registradas</span>
+                    <h3 class="text-2xl font-bold text-slate-800 mt-1" id="kpi-total-notas">8 Notas</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Entradas confirmadas no mês</p>
+                </div>
+                <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+                    <i data-lucide="file-text" class="w-6 h-6"></i>
+                </div>
+            </div>
+
+            <!-- Média por Nota -->
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <span class="text-xs font-medium text-slate-500 uppercase tracking-wider">Média por Nota (NFe)</span>
+                    <h3 class="text-2xl font-bold text-slate-800 mt-1" id="kpi-media-nota">R$ 1.708.848,12</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Ticket médio de compras</p>
+                </div>
+                <div class="p-3 bg-amber-50 text-amber-600 rounded-xl">
+                    <i data-lucide="calculator" class="w-6 h-6"></i>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Main Chart: Comparative Bar Chart -->
+            <div class="lg:col-span-2 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="font-semibold text-slate-800">Comparativo do Orçamento vs Utilizado vs Projeção</h3>
+                        <p class="text-xs text-slate-500">Valores totais consolidados em R$</p>
+                    </div>
+                    <div class="p-1.5 bg-slate-100 rounded-lg text-slate-600">
+                        <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+                    </div>
+                </div>
+                <div class="h-64 relative">
+                    <canvas id="budgetChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Distribution Chart: Cost Center Breakdown -->
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="font-semibold text-slate-800">Distribuição por Centro de Custo</h3>
+                        <p class="text-xs text-slate-500">Divisão dos gastos das notas importadas</p>
+                    </div>
+                    <div class="p-1.5 bg-slate-100 rounded-lg text-slate-600">
+                        <i data-lucide="pie-chart" class="w-4 h-4"></i>
+                    </div>
+                </div>
+                <div class="h-64 relative flex items-center justify-center">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Drag & Drop / Import Upload Zone (Collapsible / Prominent area) -->
+        <div id="drop-zone" class="border-2 border-dashed border-indigo-300 bg-indigo-50/50 hover:bg-indigo-50 rounded-xl p-6 text-center cursor-pointer transition relative" onclick="document.getElementById('file-input').click()">
+            <div class="flex flex-col items-center justify-center space-y-2">
+                <div class="p-3 bg-indigo-100 rounded-full text-indigo-600">
+                    <i data-lucide="file-up" class="w-8 h-8"></i>
+                </div>
+                <div class="text-sm font-medium text-slate-700">
+                    <span class="text-indigo-600 font-bold">Clique aqui para enviar</span> ou arraste a sua planilha do Excel (.xlsx, .xls, .csv)
+                </div>
+                <p class="text-xs text-slate-500">A planilha atualizará automaticamente as entradas de notas e o valor do Utilizado</p>
+            </div>
+        </div>
+
+        <!-- Invoices Table Section -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            
+            <!-- Table Header Toolbar -->
+            <div class="p-4 sm:p-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50">
+                <div>
+                    <h3 class="font-bold text-slate-800 text-base">Notas Fiscais de Entrada (Outubro/2026)</h3>
+                    <p class="text-xs text-slate-500">Lista detalhada dos lançamentos de entrada no sistema</p>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-3">
+                    <!-- Search Input -->
+                    <div class="relative flex-1 sm:w-64">
+                        <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                        <input type="text" id="table-search" placeholder="Buscar nota, fornecedor..." oninput="filterTable()" class="w-full pl-9 pr-3 py-1.5 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                    </div>
+
+                    <!-- Category Filter -->
+                    <select id="filter-center" onchange="filterTable()" class="py-1.5 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-700">
+                        <option value="ALL">Todos os Centros de Custo</option>
+                        <option value="Insumos / Matéria Prima">Insumos / Matéria Prima</option>
+                        <option value="Embalagens">Embalagens</option>
+                        <option value="Manutenção">Manutenção</option>
+                        <option value="Logística">Logística</option>
+                        <option value="Serviços TI">Serviços TI</option>
+                    </select>
+
+                    <!-- Export Table CSV -->
+                    <button onclick="exportToCSV()" class="p-2 text-slate-600 bg-white border border-slate-300 hover:bg-slate-100 rounded-lg transition" title="Exportar para CSV">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-100/70 border-b border-slate-200 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                            <th class="py-3 px-4">Data Entrada</th>
+                            <th class="py-3 px-4">Nº NF-e</th>
+                            <th class="py-3 px-4">Fornecedor</th>
+                            <th class="py-3 px-4">Centro de Custo</th>
+                            <th class="py-3 px-4 text-right">Valor (R$)</th>
+                            <th class="py-3 px-4 text-center">Status</th>
+                            <th class="py-3 px-4 text-center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="invoice-tbody" class="divide-y divide-slate-200 text-sm">
+                        <!-- Content inserted via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Table Footer Status -->
+            <div class="px-5 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
+                <span id="record-count">Exibindo 8 registros</span>
+                <span class="font-semibold text-slate-700" id="table-total-sum">Total Exibido: R$ 13.670.785,00</span>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal: Adicionar/Editar Nota Manualmente -->
+    <div id="modal-add-entry" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-100 transform transition-all">
+            <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h3 class="font-bold text-slate-800" id="modal-title">Nova Nota de Entrada</h3>
+                <button onclick="closeModal('modal-add-entry')" class="text-slate-400 hover:text-slate-600 transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <form id="form-add-entry" onsubmit="handleSaveEntry(event)" class="p-5 space-y-4">
+                <input type="hidden" id="entry-id">
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Data de Entrada</label>
+                        <input type="date" id="input-date" required class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Número da NF-e</label>
+                        <input type="text" id="input-nfe" placeholder="Ex: 10452" required class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Fornecedor / Razão Social</label>
+                    <input type="text" id="input-supplier" placeholder="Nome do Fornecedor" required class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Centro de Custo</label>
+                        <select id="input-center" required class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <option value="Insumos / Matéria Prima">Insumos / Matéria Prima</option>
+                            <option value="Embalagens">Embalagens</option>
+                            <option value="Manutenção">Manutenção</option>
+                            <option value="Logística">Logística</option>
+                            <option value="Serviços TI">Serviços TI</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Valor (R$)</label>
+                        <input type="number" step="0.01" id="input-value" placeholder="0.00" required class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Status</label>
+                    <select id="input-status" required class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <option value="Processado">Processado</option>
+                        <option value="Pendente">Pendente</option>
+                    </select>
+                </div>
+
+                <div class="pt-3 flex space-x-3 justify-end border-t border-slate-100">
+                    <button type="button" onclick="closeModal('modal-add-entry')" class="px-4 py-2 text-sm text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg font-medium transition">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 text-sm text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg font-medium transition">Salvar Entrada</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center space-x-3 transition-all duration-300 opacity-0 pointer-events-none transform translate-y-4 z-50">
+        <i data-lucide="check-circle" class="w-5 h-5 text-emerald-400" id="toast-icon"></i>
+        <span id="toast-message" class="text-sm font-medium">Operação realizada com sucesso!</span>
+    </div>
+
+    <script>
+        // Data Store
+        let budgetData = {
+            orcamento: 16561275.00,
+            projecaoFat: 24001848.00,
+            atualizacao: "23/10/2026"
+        };
+
+        // Initial Sample Invoices matching the ~13.67M total from October image
+        let invoices = [
+            { id: 1, data: "2026-10-02", nfe: "NF-88201", fornecedor: "Siderúrgica Paulistana S/A", centro: "Insumos / Matéria Prima", valor: 4250000.00, status: "Processado" },
+            { id: 2, data: "2026-10-05", nfe: "NF-88245", fornecedor: "Petrobras Distribuidora", centro: "Insumos / Matéria Prima", valor: 3120000.00, status: "Processado" },
+            { id: 3, data: "2026-10-09", nfe: "NF-10492", fornecedor: "Klabin Embalagens S/A", centro: "Embalagens", valor: 1850000.00, status: "Processado" },
+            { id: 4, data: "2026-10-12", nfe: "NF-40321", fornecedor: "Logística Multimodal Ltda", centro: "Logística", valor: 1420000.00, status: "Processado" },
+            { id: 5, data: "2026-10-15", nfe: "NF-09211", fornecedor: "TechSys Automação & TI", centro: "Serviços TI", valor: 680000.00, status: "Processado" },
+            { id: 6, data: "2026-10-18", nfe: "NF-77312", fornecedor: "Metalúrgica Gerdau", centro: "Insumos / Matéria Prima", valor: 1250000.00, status: "Processado" },
+            { id: 7, data: "2026-10-21", nfe: "NF-55109", fornecedor: "WEG Equipamentos Elétricos", centro: "Manutenção", valor: 800785.00, status: "Processado" },
+            { id: 8, data: "2026-10-23", nfe: "NF-30192", fornecedor: "Suzano Papel e Celulose", centro: "Embalagens", valor: 300000.00, status: "Processado" }
+        ];
+
+        let budgetChartInstance = null;
+        let categoryChartInstance = null;
+
+        // Initialize icons and dashboard on page load
+        window.onload = function() {
+            lucide.createIcons();
+            renderDashboard();
+            setupDragAndDrop();
+        };
+
+        // Format Currency
+        function formatBRL(amount) {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL',
+                maximumFractionDigits: 2
+            }).format(amount);
+        }
+
+        // Format Date BR
+        function formatDateBR(dateStr) {
+            if (!dateStr) return '';
+            const parts = dateStr.split('-');
+            if (parts.length === 3) {
+                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+            return dateStr;
+        }
+
+        // Calculate Totals & Render Dashboard
+        function renderDashboard() {
+            // Total Utilizado calculated dynamically from entries
+            const totalUtilizado = invoices.reduce((acc, curr) => acc + curr.valor, 0);
+            const saldoDisponivel = budgetData.orcamento - totalUtilizado;
+            const percentUtilizado = ((totalUtilizado / budgetData.orcamento) * 100).toFixed(1);
+            const mediaNota = invoices.length > 0 ? totalUtilizado / invoices.length : 0;
+
+            // Render KPI values
+            document.getElementById('card-orcamento').innerText = formatBRL(budgetData.orcamento);
+            document.getElementById('card-utilizado').innerText = formatBRL(totalUtilizado);
+            document.getElementById('card-projecao').innerText = formatBRL(budgetData.projecaoFat);
+            document.getElementById('card-atualizacao').innerText = budgetData.atualizacao;
+            document.getElementById('percent-utilizado').innerText = `${percentUtilizado}%`;
+
+            document.getElementById('kpi-saldo').innerText = formatBRL(saldoDisponivel);
+            document.getElementById('kpi-total-notas').innerText = `${invoices.length} Notas`;
+            document.getElementById('kpi-media-nota').innerText = formatBRL(mediaNota);
+
+            // Render Table
+            renderTable(invoices);
+
+            // Render Charts
+            renderCharts(totalUtilizado);
+        }
+
+        // Render Invoices Table
+        function renderTable(dataList) {
+            const tbody = document.getElementById('invoice-tbody');
+            tbody.innerHTML = '';
+
+            let filteredSum = 0;
+
+            dataList.forEach(inv => {
+                filteredSum += inv.valor;
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/80 transition text-slate-700";
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-medium text-slate-900">${formatDateBR(inv.data)}</td>
+                    <td class="py-3 px-4 font-mono text-xs">${inv.nfe}</td>
+                    <td class="py-3 px-4 font-semibold">${inv.fornecedor}</td>
+                    <td class="py-3 px-4">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
+                            ${inv.centro}
+                        </span>
+                    </td>
+                    <td class="py-3 px-4 text-right font-bold text-slate-900">${formatBRL(inv.valor)}</td>
+                    <td class="py-3 px-4 text-center">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${inv.status === 'Processado' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+                            ${inv.status}
+                        </span>
+                    </td>
+                    <td class="py-3 px-4 text-center">
+                        <div class="flex items-center justify-center space-x-2">
+                            <button onclick="editEntry(${inv.id})" class="text-slate-400 hover:text-indigo-600 transition" title="Editar">
+                                <i data-lucide="edit-2" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="deleteEntry(${inv.id})" class="text-slate-400 hover:text-red-600 transition" title="Excluir">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('record-count').innerText = `Exibindo ${dataList.length} registro(s)`;
+            document.getElementById('table-total-sum').innerText = `Total Exibido: ${formatBRL(filteredSum)}`;
+            lucide.createIcons();
+        }
+
+        // Filter Table Function
+        function filterTable() {
+            const query = document.getElementById('table-search').value.toLowerCase();
+            const centerFilter = document.getElementById('filter-center').value;
+
+            const filtered = invoices.filter(inv => {
+                const matchesSearch = inv.fornecedor.toLowerCase().includes(query) ||
+                                      inv.nfe.toLowerCase().includes(query) ||
+                                      inv.data.includes(query);
+                const matchesCenter = centerFilter === 'ALL' || inv.centro === centerFilter;
+                return matchesSearch && matchesCenter;
+            });
+
+            renderTable(filtered);
+        }
+
+        // Render Charts using Chart.js
+        function renderCharts(totalUtilizado) {
+            // Chart 1: Bar Chart Budget vs Utilized vs Projection
+            const ctx1 = document.getElementById('budgetChart').getContext('2d');
+            if (budgetChartInstance) budgetChartInstance.destroy();
+
+            budgetChartInstance = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: ['Orçamento Aprovado', 'Utilizado (1313)', 'Projeção Faturamento'],
+                    datasets: [{
+                        data: [budgetData.orcamento, totalUtilizado, budgetData.projecaoFat],
+                        backgroundColor: ['#e9d8a6', '#9b5de5', '#5f4b8b'],
+                        borderRadius: 8,
+                        barThickness: 40
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ' Valor: ' + formatBRL(context.raw);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return 'R$ ' + (value / 1000000).toFixed(1) + 'M';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Chart 2: Donut Chart - Category Breakdown
+            const ctx2 = document.getElementById('categoryChart').getContext('2d');
+            if (categoryChartInstance) categoryChartInstance.destroy();
+
+            // Group values by center
+            const centerTotals = {};
+            invoices.forEach(inv => {
+                centerTotals[inv.centro] = (centerTotals[inv.centro] || 0) + inv.valor;
+            });
+
+            categoryChartInstance = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(centerTotals),
+                    datasets: [{
+                        data: Object.values(centerTotals),
+                        backgroundColor: [
+                            '#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#64748b'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { boxWidth: 12, font: { size: 10 } }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ' ' + context.label + ': ' + formatBRL(context.raw);
+                                }
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+        }
+
+        // Drag & Drop Handling & File Import (SheetJS)
+        function setupDragAndDrop() {
+            const dropZone = document.getElementById('drop-zone');
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropZone.classList.add('border-indigo-500', 'bg-indigo-100/50');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropZone.classList.remove('border-indigo-500', 'bg-indigo-100/50');
+                }, false);
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                if (files.length > 0) {
+                    processFile(files[0]);
+                }
+            });
+        }
+
+        function handleFileSelect(event) {
+            const files = event.target.files;
+            if (files.length > 0) {
+                processFile(files[0]);
+            }
+        }
+
+        // Parse Excel / CSV using SheetJS
+        function processFile(file) {
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                    if (json.length < 2) {
+                        showToast("Planilha vazia ou com formato inválido.", "error");
+                        return;
+                    }
+
+                    // Simple auto-mapping heuristic
+                    let importedInvoices = [];
+                    let newTotalUtilizado = 0;
+
+                    // Parse starting after header row (row 1)
+                    for (let i = 1; i < json.length; i++) {
+                        const row = json[i];
+                        if (!row || row.length === 0) continue;
+
+                        // Try parsing value from columns
+                        const valor = parseFloat(row[4] || row[3] || row[2] || 0) || 0;
+                        if (valor > 0) {
+                            newTotalUtilizado += valor;
+                            importedInvoices.push({
+                                id: Date.now() + i,
+                                data: row[0] ? String(row[0]).split('T')[0] : "2026-10-23",
+                                nfe: String(row[1] || `NF-${Math.floor(10000 + Math.random() * 90000)}`),
+                                fornecedor: String(row[2] || "Fornecedor Importado"),
+                                centro: String(row[3] || "Insumos / Matéria Prima"),
+                                valor: valor,
+                                status: "Processado"
+                            });
+                        }
+                    }
+
+                    if (importedInvoices.length > 0) {
+                        invoices = importedInvoices;
+                        // Update date to today or file date
+                        const today = new Date();
+                        budgetData.atualizacao = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth()+1).toString().padStart(2, '0')}/${today.getFullYear()}`;
+                        
+                        renderDashboard();
+                        showToast(`${importedInvoices.length} notas importadas com sucesso!`);
+                    } else {
+                        showToast("Nenhum registro válido encontrado. Usando modelo padrão.", "warning");
+                    }
+
+                } catch (err) {
+                    console.error(err);
+                    showToast("Erro ao processar a planilha. Verifique o formato.", "error");
+                }
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        // Add / Edit Entry Handlers
+        function openModal(id) {
+            document.getElementById('form-add-entry').reset();
+            document.getElementById('entry-id').value = '';
+            document.getElementById('modal-title').innerText = "Nova Nota de Entrada";
+            document.getElementById('input-date').value = "2026-10-23";
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function handleSaveEntry(e) {
+            e.preventDefault();
+            const id = document.getElementById('entry-id').value;
+            const dataVal = document.getElementById('input-date').value;
+            const nfeVal = document.getElementById('input-nfe').value;
+            const supplierVal = document.getElementById('input-supplier').value;
+            const centerVal = document.getElementById('input-center').value;
+            const valueVal = parseFloat(document.getElementById('input-value').value) || 0;
+            const statusVal = document.getElementById('input-status').value;
+
+            if (id) {
+                // Update
+                const index = invoices.findIndex(i => i.id == id);
+                if (index !== -1) {
+                    invoices[index] = { id: Number(id), data: dataVal, nfe: nfeVal, fornecedor: supplierVal, centro: centerVal, valor: valueVal, status: statusVal };
+                    showToast("Nota atualizada com sucesso!");
+                }
+            } else {
+                // Create
+                const newInv = {
+                    id: Date.now(),
+                    data: dataVal,
+                    nfe: nfeVal,
+                    fornecedor: supplierVal,
+                    centro: centerVal,
+                    valor: valueVal,
+                    status: statusVal
+                };
+                invoices.unshift(newInv);
+                showToast("Nova nota adicionada!");
+            }
+
+            closeModal('modal-add-entry');
+            renderDashboard();
+        }
+
+        function editEntry(id) {
+            const inv = invoices.find(i => i.id === id);
+            if (!inv) return;
+
+            document.getElementById('entry-id').value = inv.id;
+            document.getElementById('input-date').value = inv.data;
+            document.getElementById('input-nfe').value = inv.nfe;
+            document.getElementById('input-supplier').value = inv.fornecedor;
+            document.getElementById('input-center').value = inv.centro;
+            document.getElementById('input-value').value = inv.valor;
+            document.getElementById('input-status').value = inv.status;
+
+            document.getElementById('modal-title').innerText = "Editar Nota de Entrada";
+            document.getElementById('modal-add-entry').classList.remove('hidden');
+        }
+
+        function deleteEntry(id) {
+            if (confirm("Tem certeza que deseja excluir este registro?")) {
+                invoices = invoices.filter(i => i.id !== id);
+                renderDashboard();
+                showToast("Nota excluída.");
+            }
+        }
+
+        // Export Table Data to CSV
+        function exportToCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,Data;NFe;Fornecedor;Centro de Custo;Valor;Status\n";
+            invoices.forEach(inv => {
+                csvContent += `${inv.data};${inv.nfe};${inv.fornecedor};${inv.centro};${inv.valor};${inv.status}\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `orcamento_compras_outubro_${budgetData.atualizacao.replace(/\//g,'-')}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showToast("Relatório CSV gerado e baixado!");
+        }
+
+        // Toast Feedback Message
+        function showToast(message, type = "success") {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            const toastIcon = document.getElementById('toast-icon');
+
+            toastMsg.innerText = message;
+            
+            if (type === "error") {
+                toastIcon.setAttribute('data-lucide', 'alert-circle');
+                toastIcon.className = "w-5 h-5 text-red-400";
+            } else {
+                toastIcon.setAttribute('data-lucide', 'check-circle');
+                toastIcon.className = "w-5 h-5 text-emerald-400";
+            }
+            lucide.createIcons();
+
+            toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-4');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-4');
+                toast.classList.remove('opacity-100', 'translate-y-0');
+            }, 3500);
+        }
+    </script>
+</body>
+</html>
