@@ -72,6 +72,11 @@
                     <span>Subir Entradas (1313)</span>
                 </button>
 
+                <button onclick="clearEntries1313()" class="flex items-center space-x-2 bg-rose-600 hover:bg-rose-700 text-white text-xs sm:text-sm font-medium py-2 px-3 sm:px-4 rounded-lg transition shadow-sm" title="Limpar todas as notas de entrada 1313">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    <span>Limpar Notas (1313)</span>
+                </button>
+
                 <button onclick="openImportModal('orders')" class="flex items-center space-x-2 bg-amber-600 hover:bg-amber-700 text-white text-xs sm:text-sm font-medium py-2 px-3 sm:px-4 rounded-lg transition shadow-sm">
                     <i data-lucide="file-check-2" class="w-4 h-4"></i>
                     <span>Subir Pedidos (220-1301)</span>
@@ -397,44 +402,20 @@
                     </select>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Data / Dt. Emissão</label>
-                        <input type="date" id="input-date" required class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1" id="label-num-doc">Nº Nota / Pedido</label>
-                        <input type="text" id="input-doc-num" placeholder="Ex: 33424" required class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-3 gap-3">
-                    <div class="col-span-1">
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Cód. Fornec.</label>
-                        <input type="text" id="input-supplier-code" placeholder="Ex: 5071" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                    </div>
-                    <div class="col-span-2">
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Razão Social / Fornecedor</label>
-                        <input type="text" id="input-supplier" placeholder="Ex: BEBIDAS GRASSI DO BRASIL LTDA" required class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Valor Total (R$)</label>
-                        <input type="number" step="0.01" id="input-value" placeholder="0.00" required class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Rotina / Centro</label>
-                        <input type="text" id="input-rotina" placeholder="Ex: 220" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                    </div>
-                </div>
-
-                <div class="pt-3 flex space-x-3 justify-end border-t border-slate-100">
-                    <button type="button" onclick="closeModal('modal-add-entry')" class="px-4 py-2 text-sm text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg font-medium transition">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 text-sm text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg font-medium transition">Salvar Lançamento</button>
-                </div>
-            </form>
+    <!-- Modal de Confirmação Customizado para Limpar Notas -->
+    <div id="modal-confirm-clear" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full shadow-2xl p-6 border border-slate-100 text-center space-y-4">
+            <div class="w-12 h-12 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto">
+                <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-slate-800 text-lg">Limpar todas as Notas 1313?</h3>
+                <p class="text-xs text-slate-500 mt-1">Essa ação removerá permanentemente todas as notas de entrada (1313) carregadas. Deseja continuar?</p>
+            </div>
+            <div class="flex space-x-3 justify-center pt-2">
+                <button onclick="closeModal('modal-confirm-clear')" class="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition">Cancelar</button>
+                <button onclick="executeClearEntries1313()" class="px-4 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-lg transition shadow-sm">Sim, Limpar Notas</button>
+            </div>
         </div>
     </div>
 
@@ -989,20 +970,32 @@
                 showToast("Nota de entrada adicionada!");
             }
 
-            closeModal('modal-add-entry');
+        // Limpar todas as notas de entrada (1313)
+        function clearEntries1313() {
+            if (invoices.length === 0) {
+                showToast("Não há notas de entrada (1313) para limpar.", "error");
+                return;
+            }
+            openModal('modal-confirm-clear');
+        }
+
+        function executeClearEntries1313() {
+            const count = invoices.length;
+            invoices = [];
+            closeModal('modal-confirm-clear');
             renderDashboard();
+            showToast(`${count} notas de entrada (1313) foram limpas com sucesso!`);
         }
 
         function deleteEntry(id, type) {
-            if (confirm("Deseja realmente remover este item?")) {
-                if (type === 'entries') {
-                    invoices = invoices.filter(i => i.id !== id);
-                } else {
-                    purchaseOrders = purchaseOrders.filter(p => p.id !== id);
-                }
-                renderDashboard();
-                showToast("Registro removido.");
+            if (type === 'entries') {
+                invoices = invoices.filter(i => i.id !== id);
+                showToast("Nota de entrada removida.");
+            } else {
+                purchaseOrders = purchaseOrders.filter(p => p.id !== id);
+                showToast("Pedido removido.");
             }
+            renderDashboard();
         }
 
         function editOutrosValores() {
