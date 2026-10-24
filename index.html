@@ -607,7 +607,6 @@
                 });
 
             } else {
-                // Pre-Entry 1301 Tab
                 headRow.innerHTML = `
                     <th class="py-2.5 px-3 text-center">Status</th>
                     <th class="py-2.5 px-3">Nº Transação</th>
@@ -694,17 +693,26 @@
             }
         }
 
+        // Improved File Parser to handle legacy XLS, XLSX and CSV files seamlessly
         function processFile(file, type) {
             const reader = new FileReader();
 
             reader.onload = function(e) {
                 try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    let workbook;
+                    const rawData = e.target.result;
+                    
+                    try {
+                        workbook = XLSX.read(rawData, { type: 'binary', cellDates: true });
+                    } catch (errBinary) {
+                        workbook = XLSX.read(rawData, { type: 'array', cellDates: true });
+                    }
+
+                    const firstSheetName = workbook.SheetNames[0];
+                    const firstSheet = workbook.Sheets[firstSheetName];
                     const json = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
 
-                    if (json.length < 2) {
+                    if (!json || json.length < 2) {
                         showToast("Planilha vazia ou formato inválido.", "error");
                         return;
                     }
@@ -768,7 +776,8 @@
                     } else if (type === '1301') {
                         // Intelligent Parser for Pre Entrada 1301
                         let headerIdx = 0;
-                        for (let r = 0; r < Math.min(5, json.length); r++) {
+                        for (let r = 0; r < Math.min(10, json.length); r++) {
+                            if (!json[r]) continue;
                             const lineStr = json[r].join(' ').toLowerCase();
                             if (lineStr.includes('nota fiscal') || lineStr.includes('vlr. total') || lineStr.includes('fornecedor')) {
                                 headerIdx = r;
@@ -776,7 +785,7 @@
                             }
                         }
 
-                        const headers = json[headerIdx].map(h => String(h || '').trim().toLowerCase());
+                        const headers = (json[headerIdx] || []).map(h => String(h || '').trim().toLowerCase());
                         const idxStatus = headers.findIndex(h => h.includes('status'));
                         const idxTrans = headers.findIndex(h => h.includes('transa'));
                         const idxNfe = headers.findIndex(h => h.includes('nota fiscal') || h.includes('nf'));
@@ -797,7 +806,6 @@
                             const valor = typeof valorRaw === 'number' ? valorRaw : parseFloat(String(valorRaw).replace(/\./g,'').replace(',','.')) || 0;
                             const nfe = idxNfe !== -1 ? String(row[idxNfe] || '') : String(row[2] || '');
 
-                            // Skip summary/total rows
                             if (!nfe || nfe.toLowerCase().includes('total') || isNaN(valor) || valor <= 0) continue;
 
                             importedPre.push({
@@ -818,16 +826,18 @@
                             switchTab('1301');
                             renderDashboard();
                             showToast(`${importedPre.length} pré-entradas (1301) importadas!`);
+                        } else {
+                            showToast("Nenhum registro válido encontrado no arquivo.", "error");
                         }
                     }
 
                 } catch (err) {
-                    console.error(err);
-                    showToast("Erro ao ler o arquivo.", "error");
+                    console.error("Erro na leitura do arquivo:", err);
+                    showToast("Erro ao ler o arquivo. Verifique se o formato está correto.", "error");
                 }
             };
 
-            reader.readAsArrayBuffer(file);
+            reader.readAsBinaryString(file);
         }
 
         function openModal(id) {
